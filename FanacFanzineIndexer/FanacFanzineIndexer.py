@@ -58,7 +58,7 @@ for dir in dirList:
         contents=file.read()
 
     # Get the <title>
-
+    title=Wikidot-helpers.
     # Try to find the first two tables
     start1=contents.lower().find("<table")
     end1=contents.lower().find("</table>", start1)

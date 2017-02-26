@@ -60,17 +60,34 @@ for dir in dirList:
 
     # Get the <title>
     t=Helpers.extractTaggedStuff(contents, 0, "title")
+    if t == None:
+        print("  ***Could not find <title>...</title>.  Aborting.")
+        continue
     title=t[0]
     loc=t[1]
 
     # Try to find the first two tables
     t=Helpers.extractTaggedStuff(contents, loc, "table")    # Ignored first table
+    if t == None:
+        print("  ***Could not find first <table>.  Aborting.")
+        continue
     loc=t[1]
     t=Helpers.extractTaggedStuff(contents, loc, "table")
+    if t == None:
+        print("  ***Could not find second <table>.  Aborting.")
+        continue
     table=t[0]
     loc=t[1]
 
     # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
     table=table.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
+    # Eliminate /n
+    table=table.replace("\n", "")
+
+    # OK, start decoding the index table.
+
+    # The first row should be column headers bounded by <th> tags.
+    # We will loop until we run out of <th> tags
+
 
     i=0

@@ -26,7 +26,7 @@ if len(dirname) == 0:
 # The strategy here is to walk the entire fanzines directory and build up the structure of the entire directory before doing any processing.
 
 # Some directory formats are hard to recognize and/or archaic. They are listed by hand, here.
-singleIssueDirectories=["Acolyte"]
+singleIssueDirectories=["Abstract", "Acolyte"]
 
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
@@ -44,11 +44,32 @@ for dir in dirList:
         print("  ***Missing: "+indexfilename)
         continue
 
-    # The most common directory index.html format consists of three tables.
-    # The top table holds the top navigation buttons.
-    # The middle table holds the rows of issue links.
-    # The bottom table holds the bottom navigation buttons. (This table can safely be ignored.)
-    # Read the index.html file and located the first two tables.
+    # The most common directory index.html format
+    # <title></title> tagging the fanzine's display name
+    # Some page info in <h2></h2>
+    #   (Sometimes some untagged bumpf following this.)
+    # A top table which holds the top navigation buttons and can be ignored.
+    # A middle table which holds the rows of issue links.
+    # A bottom table holds the bottom navigation buttons and can be ignored, also.
+    # Some more untagged bumpf included who scanned it and the update date.
+
+    # Read the index.html file.
     with open(indexfilename, "r") as file:
         contents=file.read()
+
+    # Get the <title>
+
+    # Try to find the first two tables
+    start1=contents.lower().find("<table")
+    end1=contents.lower().find("</table>", start1)
+    start2=contents.lower().find("<table", end1)
+    end2=contents.lower().find("</table>", start2)
+
+    table1=contents[start1:end1+8]
+    table2=contents[start2:end2+8]
+
+    # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
+    table1=table1.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
+    table2=table2.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
+
     i=0

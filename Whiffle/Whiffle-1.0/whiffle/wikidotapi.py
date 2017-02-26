@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import ConfigParser
+import configparser
 from xmlrpclib import ServerProxy
 from utils import Descriptor
 
@@ -47,7 +47,7 @@ class connection(object):
 		self.pages = None
 		self.pageitems = {}
 		self.categories = None
-		self.config = ConfigParser.SafeConfigParser({"site":None, "user":None, "key":None})
+		self.config = configparser.SafeConfigParser({"site":None, "user":None, "key":None})
 		self.config.read(filename)
 		self.username = self.config.get(user+"@wikidot", "user")
 		if self.username == None:
@@ -232,4 +232,4 @@ if __name__ == "__main__":
 		print("    ", x)
 	
 	name = "a-category:a-page-name"
-	print("default title for", name, "would be", api.default_title(name)))
+	print("default title for", name, "would be", api.default_title(name))

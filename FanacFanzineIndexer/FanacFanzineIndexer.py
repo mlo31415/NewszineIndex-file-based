@@ -59,19 +59,18 @@ for dir in dirList:
         contents=file.read()
 
     # Get the <title>
-    title=Helpers.extractTaggedStuff(contents, 0, "title")
+    t=Helpers.extractTaggedStuff(contents, 0, "title")
+    title=t[0]
+    loc=t[1]
 
     # Try to find the first two tables
-    start1=contents.lower().find("<table")
-    end1=contents.lower().find("</table>", start1)
-    start2=contents.lower().find("<table", end1)
-    end2=contents.lower().find("</table>", start2)
-
-    table1=contents[start1:end1+8]
-    table2=contents[start2:end2+8]
+    t=Helpers.extractTaggedStuff(contents, loc, "table")    # Ignored first table
+    loc=t[1]
+    t=Helpers.extractTaggedStuff(contents, loc, "table")
+    table=t[0]
+    loc=t[1]
 
     # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
-    table1=table1.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
-    table2=table2.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
+    table=table.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
 
     i=0

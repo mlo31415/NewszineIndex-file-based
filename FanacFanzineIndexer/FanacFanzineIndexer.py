@@ -86,8 +86,21 @@ for dir in dirList:
 
     # OK, start decoding the index table.
 
-    # The first row should be column headers bounded by <th> tags.
+    # The first row (bounded by <tr> tags) should be column headers bounded by <th> tags.
     # We will loop until we run out of <th> tags
-
+    columns=[]
+    t=Helpers.extractTaggedStuff(table, 0, "tr")
+    if t == None:
+        print("  ***Could not find coumn headers row.  Aborting.")
+        continue
+    headers=t[0]
+    endheaders=t[1]
+    loc=0
+    while True:
+        t=Helpers.extractTaggedStuff(headers, loc, "th")
+        if t == None:
+            break
+        columns.append(t[0])
+        loc=t[1]
 
     i=0

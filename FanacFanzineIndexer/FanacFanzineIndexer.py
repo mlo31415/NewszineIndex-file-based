@@ -32,7 +32,10 @@ singleIssueDirectories=["Abstract", "Acolyte"]
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
 
-# Walk the list of directories
+# Walk the list of directories and create fanzines
+# fanzines is a dictionary (indexed by name) with each element being a list of row tuples
+fanzines={}
+
 for dir in dirList:
     print(dir+" ...processing")
     if dir in singleIssueDirectories:
@@ -103,6 +106,8 @@ for dir in dirList:
         columns.append(t[0])
         loc=t[1]
 
+    print("   "+str(columns))
+
     table=[]
     # OK. Now we decode the rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
     loc=endheaders
@@ -124,4 +129,25 @@ for dir in dirList:
             loc = t[1]
         loc=endrow
         table.append(row)
-    i=0
+
+    fanzines[title]=table
+
+    # OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
+    # Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
+    # Here are some tables of synomyms
+    monthSynonyms=["Month", "Mo.", "Quarter/Month", "Season"]
+    issueSynonyms=["Issue", "#"]
+    volumeSynonyms=["Volume", "Vol", "Vol.", "Vol/#", "Vol./#"]
+
+    # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
+    ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors", "Editor/s", "Author/Artist", "Repro", "Publication", "Pp."]
+
+    # For each issue, we want the following:
+    #   Date
+    #   Issue designator (Vol/Num or just Num)
+    #   HTML link
+
+    # The data will be stored in a new dictionary with the same structure as "fanzines"
+
+
+i=0

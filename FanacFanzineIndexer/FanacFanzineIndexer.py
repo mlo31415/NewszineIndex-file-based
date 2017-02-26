@@ -76,20 +76,20 @@ for dir in dirList:
     if t == None:
         print("  ***Could not find second <table>.  Aborting.")
         continue
-    table=t[0]
+    tableText=t[0]
     loc=t[1]
 
     # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
-    table=table.replace("<p>","").replace("<P>","").replace("</p>","").replace("</P>","")
+    tableText=tableText.replace("<p>", "").replace("<P>", "").replace("</p>", "").replace("</P>", "")
     # Eliminate /n
-    table=table.replace("\n", "")
+    tableText=tableText.replace("\n", "")
 
     # OK, start decoding the index table.
 
     # The first row (bounded by <tr> tags) should be column headers bounded by <th> tags.
     # We will loop until we run out of <th> tags
     columns=[]
-    t=Helpers.extractTaggedStuff(table, 0, "tr")
+    t=Helpers.extractTaggedStuff(tableText, 0, "tr")
     if t == None:
         print("  ***Could not find coumn headers row.  Aborting.")
         continue
@@ -103,4 +103,25 @@ for dir in dirList:
         columns.append(t[0])
         loc=t[1]
 
+    table=[]
+    # OK. Now we decode the rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
+    loc=endheaders
+    while True:     # Loop over rows
+        row=()
+        t=Helpers.extractTaggedStuff(tableText, loc, "tr")
+        if t == None:
+            break
+        rowText=t[0]
+        endrow=t[1]
+        if t == None:
+            break
+        loc=0
+        while True: # Loop over columns in row
+            t = Helpers.extractTaggedStuff(rowText, loc, "td")
+            if t == None:
+                break
+            row=row+(t[0],)
+            loc = t[1]
+        loc=endrow
+        table.append(row)
     i=0

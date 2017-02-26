@@ -109,6 +109,7 @@ for dir in dirList:
     print("   "+str(columns))
 
     table=[]
+    table.append(columns)
     # OK. Now we decode the rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
     loc=endheaders
     while True:     # Loop over rows
@@ -132,22 +133,63 @@ for dir in dirList:
 
     fanzines[title]=table
 
-    # OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
-    # Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
-    # Here are some tables of synomyms
-    monthSynonyms=["Month", "Mo.", "Quarter/Month", "Season"]
-    issueSynonyms=["Issue", "#"]
-    volumeSynonyms=["Volume", "Vol", "Vol.", "Vol/#", "Vol./#"]
+# OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
+# Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
+# Here is the tables of synomyms
+synonyms={
+    "Month" : "Month",
+    "Mo." : "Month",
+    "Quarter/Month" : "Month",
+    "Season" : "Month",
+    "Issue" : "Issue",
+    "#" : "Issue",
+    "Num" : "Issue",
+    "Number": "Issue",
+    "No" : "Issue",
+    "Year" : "Year",
+    "Volume" : "Volume",
+    "Vol" : "Volume",
+    "Vol." : "Volume",
+    "Vol/#" : "Volume",
+    "Vol./#" : "Volume",
+    "Day" : "Day",
+    "Date" : "Date",
+    "Issue Date" : "Date"
+}
 
-    # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
-    ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors", "Editor/s", "Author/Artist", "Repro", "Publication", "Pp."]
+# We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
+ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors",
+               "Editor/s", "Author/Artist", "Repro", "Publication", "Pp.", "PoB", "LGP", "GP", "Size", "Publisher", "Fanzine", "APA", "Page", "Zine",
+               "Author", "Art by", "Story by", "Type of Material", "Reprinted from:", "Content", "Sub-Title"]
 
-    # For each issue, we want the following:
-    #   Date
-    #   Issue designator (Vol/Num or just Num)
-    #   HTML link
+# For each issue, we want the following:
+#   Date
+#   Issue designator (Vol/Num or just Num)
+#   HTML link
 
-    # The data will be stored in a new dictionary with the same structure as "fanzines"
+# The data will be stored in a new dictionary with the same structure as "fanzines"
+standardized={}
+
+# Walk the fanzines dictionary and extract the data to create the standardized version
+for title in fanzines:
+    table=fanzines[title]
+    firstTime=True
+    columnHeaders=[]
+    for tableRow in table:
+        if firstTime:
+            # The first item in the table is the column headers, but we need to convert these to their standard forms
+            for header in tableRow:
+                if header in ignoreColumns:
+                    columnHeaders.append("ignored")
+                else:
+                    if header in synonyms:
+                        columnHeaders.append(synonyms[header])
+                    else:
+                        print("   ***Column header not recognized:  "+header)
+            firstTime=False
+
+
+# The next step is to try to make sense of the date information and to generate a date for each issue.
 
 
 i=0

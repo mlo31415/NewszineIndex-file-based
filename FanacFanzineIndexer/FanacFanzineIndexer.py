@@ -3,6 +3,7 @@ from tkinter import filedialog
 import os
 import os.path
 import xml.etree.ElementTree as ET
+import Helpers
 
 # Get the directory containing the copy of the fanac.org website to be analyzed.
 root = tkinter.Tk()
@@ -58,7 +59,8 @@ for dir in dirList:
         contents=file.read()
 
     # Get the <title>
-    title=Wikidot-helpers.
+    title=Helpers.extractTaggedStuff(contents, 0, "title")
+
     # Try to find the first two tables
     start1=contents.lower().find("<table")
     end1=contents.lower().find("</table>", start1)

@@ -197,6 +197,7 @@ for title in fanzines:
         try:
             dateField=tableRow[columnHeaders.index("Date")]
             print("   date="+dateField)
+            date=Helpers.interpretDate(dateField)
         except ValueError:
             dateField=None
 

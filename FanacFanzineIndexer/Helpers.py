@@ -209,6 +209,12 @@ def interpretDate(dateStr):
             year=int(ds[2])
             return datetime.datetime(year, month, day).date()
 
+    # Case: A 4-digit year by itself
+    if len(dateStr) == 4:
+        try:
+            return datetime.datetime(int(dateStr), 1, 1).fate()
+        except:
+            year=None
 
     return None
 

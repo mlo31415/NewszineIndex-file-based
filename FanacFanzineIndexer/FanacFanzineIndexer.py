@@ -1,5 +1,6 @@
 import tkinter
 from tkinter import filedialog
+import datetime
 import os
 import os.path
 import xml.etree.ElementTree as ET
@@ -193,16 +194,51 @@ for title in fanzines:
         # The rest of the rows are data rows.
         # The next step is to try to make sense of the date information and to generate a date for each issue.
         # First see if there's a date field
-        date=None
         try:
             dateField=tableRow[columnHeaders.index("Date")]
             date=Helpers.interpretDate(dateField)
             if date == None:
                 print("   ***"+title+": date interpretation failed, date=" + dateField)
         except ValueError:
-            dateField=None
+            date=None
 
+        # If the date field didn't work out(either because there was none or because it was uninterpretable), see if there are individual month, day and year fields.
+        if date == None:
+            try:
+                yearField=tableRow[columnHeaders.index("Year")]
+                year=Helpers.InterpretYear(yearField)
+            except:
+                year=None
 
+            try:
+                monthField=tableRow[columnHeaders.index("Month")]
+                month=Helpers.InterpretMonth(monthField)
+            except:
+                month=None
+
+            if month == None:
+                month=1     # If there's no readable month, assume we have a year only and date it January
+
+            try:
+                dayField=tableRow[columnHeaders.index("Day")]
+                day=int(dayField)
+            except:
+                day=None
+
+            if day == None:
+                day=1       # If there's no readable day, assume we have a year and month only and date it the 1st
+
+            if year != None:    # We must have a year.
+                try:
+                    date=datetime.datetime(year, month, day).date
+                except:
+                    print("   ***BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
+                    date=None
+
+        if date == None:
+            print("   ***NO DATE. Title= "+title+ "   Table row="+" ".join(tableRow))
+
+        # Now we need to figure out where the links are...
 
 
 i=0

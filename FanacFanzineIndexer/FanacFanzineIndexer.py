@@ -28,7 +28,17 @@ if len(dirname) == 0:
 # The strategy here is to walk the entire fanzines directory and build up the structure of the entire directory before doing any processing.
 
 # Some directory formats are hard to recognize and/or archaic. They are listed by hand, here.
-singleIssueDirectories=["Abstract", "Acolyte"]
+singleIssueDirectories=["Abstract", "Acolyte", "BNF_of_IZ", "Chanticleer", "Constellation", "emu", "Enchanted_Duplicator",
+                        "Entropy", "Fake", "Fan-Fare", "FanToSee", "kanga", "Leaflet", "LeeHoffman",
+                        "les", "lindsay", "Mallophagan", "Masque", "Monster", "NewFrontiers", "NOSFAn", "Planeteer", "Sense_of_FAPA",
+                        "SF_Digest", "SF_Digest_2", "SFSFS", "SpaceDiversions", "SpaceFlight", "SpaceMagazine",
+                        "Starlight", "SunSpots", "Tomorrow", "Vanations", "Vertigo", "WildHair", "Willis_Papers", "X", "Yandro"]
+
+nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood", "Bids_etc", "Boskone", "Chicon", "Clevention", "Constellation",
+                        "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
+                        "Gotterdammerung", "Helios", "IGOTS", "Iguanacon", "Loncon", "Lunacon", "Mimosa", "Minicon", "Miscellaneous",
+                        "Monster", "NebulaAwardsBanquet", "NEOSFS", "Nolacon", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Philcon", "Pittcon",
+                        "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"}
 
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
@@ -38,10 +48,13 @@ dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname,
 fanzines={}
 
 for dir in dirList:
-    print(dir+" ...processing")
     if dir in singleIssueDirectories:
-        print("   This is a single issue directory. Skipping.")
+        print(dir+"  (single-issue -- skipped)")
         continue
+    if dir in nonStandardDirectories:
+        print(dir+"  (non-standard -- skipped)")
+        continue
+    print(dir+" ...processing")
 
     # There should be an index.html file.  Open it.
     indexfilename=os.path.join(dirname, dir,"index.html")

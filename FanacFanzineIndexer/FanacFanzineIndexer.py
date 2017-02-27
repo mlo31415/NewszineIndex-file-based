@@ -146,6 +146,7 @@ synonyms={
     "Num" : "Issue",
     "Number": "Issue",
     "No" : "Issue",
+    "No," : "issue",
     "Year" : "Year",
     "Volume" : "Volume",
     "Vol" : "Volume",
@@ -187,9 +188,19 @@ for title in fanzines:
                     else:
                         print("   ***Column header not recognized:  "+header)
             firstTime=False
+            continue
+
+        # The rest of the rows are data rows.
+        # The next step is to try to make sense of the date information and to generate a date for each issue.
+        # First see if there's a date field
+        date=None
+        try:
+            dateField=tableRow[columnHeaders.index("Date")]
+            print("   date="+dateField)
+        except ValueError:
+            dateField=None
 
 
-# The next step is to try to make sense of the date information and to generate a date for each issue.
 
 
 i=0

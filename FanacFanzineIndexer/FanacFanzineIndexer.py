@@ -94,7 +94,7 @@ for dir in dirList:
     columns=[]
     t=Helpers.extractTaggedStuff(tableText, 0, "tr")
     if t == None:
-        print("  ***Could not find coumn headers row.  Aborting.")
+        print("  ***Could not find column headers row.  Aborting.")
         continue
     headers=t[0]
     endheaders=t[1]
@@ -196,8 +196,9 @@ for title in fanzines:
         date=None
         try:
             dateField=tableRow[columnHeaders.index("Date")]
-            print("   date="+dateField)
             date=Helpers.interpretDate(dateField)
+            if date == None:
+                print("   date=" + dateField)
         except ValueError:
             dateField=None
 

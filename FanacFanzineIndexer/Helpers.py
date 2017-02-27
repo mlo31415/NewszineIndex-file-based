@@ -54,6 +54,7 @@ def InterpretMonth(monthstring):
                           "fall" : 10, "autumn" : 10,
                           "january-february" : 2,
                           "january/february" : 2,
+                          "winter/spring" : 3,
                           "march-april" : 4,
                           "april-may" : 5,
                           "apr-may" : 5,
@@ -75,11 +76,58 @@ def InterpretMonth(monthstring):
         month=None
     return month
 
+#-----------------------------------------------------
+# Handle dates like "Thanksgiving"
+# Returns a month/day tuple
+def InterpretNamedDay(dayString):
+    namedDayConverstionTable={
+        "unknown": (1, 1),
+        "unknown ?": (1, 1),
+        "new year's day" : (1, 1),
+        "edgar allen poe's birthday": (1, 19),
+        "groundhog day": (2, 4),
+        "canadian national flag day": (2, 15),
+        "chinese new year": (2, 15),
+        "lunar new year": (2, 15),
+        "leap day": (2, 29),
+        "st urho's day": (3, 16),
+        "saint urho's day": (3, 16),
+        "april fool's day" : (4, 1),
+        "good friday": (4, 8),
+        "easter": (4, 10),
+        "national garlic day": (4, 19),
+        "world free press day": (5, 3),
+        "cinco de mayo": (5, 5),
+        "victoria day": (5, 22),
+        "world no tobacco day": (5, 31),
+        "world environment day": (6, 5),
+        "canada day": (7, 1),
+        "stampede": (7, 10),
+        "stampede rodeo": (7, 10),
+        "stampede parade": (7, 10),
+        "system administrator appreciation day": (7, 25),
+        "international whale shark day": (8, 30),
+        "labor day": (9, 3),
+        "labour day": (9, 3),
+        "(canadian) thanksgiving": (10, 15),
+        "halloween": (10, 31),
+        "remembrance day": (11, 11),
+        "thanksgiving": (11, 24),
+        "saturnalia": (12, 21),
+        "christmas": (12, 25),
+        "christmas issue": (12, 25),
+        "boxing day": (12, 26),
+        "hogmanay": (12, 31),
+        "auld lang syne": (12, 31),
+    }
+    try:
+        tuple=namedDayConverstionTable[dayString.lower()]
+    except:
+        tuple=None
+    return tuple
+
 #---------------------------------------------------
-# Try to make sense of the date information
-# We'll normally have one of two things:
-#       A Date string which might be like "10/22/85" or like "October 1984" or just funky randomness
-# Unknown input arguments should be None
+# Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
 def interpretDate(dateStr):
     import datetime
     import time
@@ -91,7 +139,35 @@ def interpretDate(dateStr):
 
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
 
-    # Case:  <Month> <year>  ("October 1984", "Jun 73", etc.  Possibly including comma after the month)
+    # Some names are of the form "<named day> year" as in "Christmas, 1955"
+    ds=dateStr.replace(",", " ").replace("-", " ").lower().split()
+    if len(ds) > 1:
+        year=InterpretYear(ds[len(ds)-1])
+        if year != None:
+            dayString=" ".join(ds[:-1])
+            dayTuple=InterpretNamedDay(dayString)
+            if dayTuple != None:
+                return datetime.datetime(year, dayTuple[0], dayTuple[1]).date()
+
+    # Case: late/early <month> <year>  ("Late October 1999")
+    # We recognize this by seeing three tokens separated by whitespace, with the first "late", "mid" or "early", the second a month name and the third a number
+    ds = dateStr.replace(",", " ").replace("-", " ").lower().split()
+    if len(ds) == 3:
+        if ds[0].lower() == "early":
+            day = 8
+        if ds[0].lower() == "mid":
+            day = 15
+        if ds[0].lower() == "middle":
+            day = 15
+        if ds[0].lower() == "late":
+            day = 24
+        if day != None:
+            month = InterpretMonth(ds[1])
+            year = InterpretYear(ds[2])
+            if month != None and year != None:
+                return datetime.datetime(year, month, day).date()
+
+    # Case:  <Month> <year>  ("October 1984", "Jun 73", etc.  Possibly including a comma after the month)
     # We recognize this by seeing two tokens separate by whitespace, with the first a month name and the second a number
     ds=dateStr.replace(",", " ").split()
     if len(ds) == 2:
@@ -100,21 +176,6 @@ def interpretDate(dateStr):
         if month != None and year != None:
             return datetime.datetime(year, month, 1).date()
 
-    # Case: late/early <month> <year>  ("Late October 1999")
-    # We recognize this by seeing three tokens separate by whitespace, with the first "late", "mid" or "early", the second a month name and the third a number
-    ds=dateStr.replace(",", " ").replace("-", " ").split()
-    if len(ds) == 3:
-        if ds[0].lower() == "early":
-            day=8
-        if ds[0].lower() == "mid":
-            day=15
-        if ds[0].lower() == "late":
-            day=24
-        if day != None:
-            month=InterpretMonth(ds[1])
-            year=InterpretYear(ds[2])
-            if month != None and year != None:
-                return datetime.datetime(year, month, day).date()
 
     # Case:  mm/dd/yy or mm/dd/yyyy
     ds=dateStr.split("/")
@@ -132,6 +193,16 @@ def interpretDate(dateStr):
             day=int(ds[1])
             year=int(ds[2])
             return datetime.datetime(year, month, day).date()
+
+    # Case: 11 October 1973
+    ds=dateStr.replace(",", " ").split()
+    if len(ds) == 3:
+        month=InterpretMonth(ds[1])
+        if month != None:
+            day=int(ds[0])
+            year=int(ds[2])
+            return datetime.datetime(year, month, day).date()
+
 
     return None
 

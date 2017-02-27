@@ -186,7 +186,7 @@ for title in fanzines:
                     if header in synonyms:
                         columnHeaders.append(synonyms[header])
                     else:
-                        print("   ***Column header not recognized:  "+header)
+                        print("   ***"+title+": Column header not recognized:  "+header)
             firstTime=False
             continue
 
@@ -198,7 +198,7 @@ for title in fanzines:
             dateField=tableRow[columnHeaders.index("Date")]
             date=Helpers.interpretDate(dateField)
             if date == None:
-                print("   date=" + dateField)
+                print("   ***"+title+": date interpretation failed, date=" + dateField)
         except ValueError:
             dateField=None
 

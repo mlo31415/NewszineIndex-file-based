@@ -24,11 +24,9 @@ def extractTaggedStuff(string, start, tag):
 #---------------------------------------------------------------------
 def InterpretYear(yearstring):
     try:
-        year=int(yearstring)
+        return int(yearstring)
     except:
-        print("   ***Year conversion failed: '" + yearstring+"'")
-        year=None
-    return year
+        return None
 
 #---------------------------------------------------------------------
 def InterpretMonth(monthstring):
@@ -70,11 +68,9 @@ def InterpretMonth(monthstring):
                           "december-january" : 12,
                           "dec-jan" : 12}
     try:
-        month=monthConversionTable[monthstring.replace(" ", "").lower()]
+        return monthConversionTable[monthstring.replace(" ", "").lower()]
     except:
-        print("   ***Month conversion failed: "+monthstring)
-        month=None
-    return month
+        return None
 
 #-----------------------------------------------------
 # Handle dates like "Thanksgiving"
@@ -85,12 +81,14 @@ def InterpretNamedDay(dayString):
         "unknown ?": (1, 1),
         "new year's day" : (1, 1),
         "edgar allen poe's birthday": (1, 19),
+        "edgar allan poe's birthday": (1, 19),
         "groundhog day": (2, 4),
         "canadian national flag day": (2, 15),
         "chinese new year": (2, 15),
         "lunar new year": (2, 15),
         "leap day": (2, 29),
         "st urho's day": (3, 16),
+        "st. urho's day": (3, 16),
         "saint urho's day": (3, 16),
         "april fool's day" : (4, 1),
         "good friday": (4, 8),
@@ -112,6 +110,7 @@ def InterpretNamedDay(dayString):
         "(canadian) thanksgiving": (10, 15),
         "halloween": (10, 31),
         "remembrance day": (11, 11),
+        "rememberance day": (11, 11),
         "thanksgiving": (11, 24),
         "saturnalia": (12, 21),
         "christmas": (12, 25),
@@ -121,17 +120,14 @@ def InterpretNamedDay(dayString):
         "auld lang syne": (12, 31),
     }
     try:
-        tuple=namedDayConverstionTable[dayString.lower()]
+        return namedDayConverstionTable[dayString.lower()]
     except:
-        tuple=None
-    return tuple
+        return None
 
 #---------------------------------------------------
 # Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
 def interpretDate(dateStr):
     import datetime
-    import time
-    import string
 
     day=None
     month=None
@@ -139,28 +135,38 @@ def interpretDate(dateStr):
 
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
 
-    # Some names are of the form "<named day> year" as in "Christmas, 1955"
-    ds=dateStr.replace(",", " ").replace("-", " ").lower().split()
+    # Some names are of the form "<named day> year" as in "Christmas, 1955" of "Groundhog Day 2001"
+    ds=dateStr.replace(",", " ").replace("-", " ").lower().split()  # We ignore hyphens and commans
     if len(ds) > 1:
         year=InterpretYear(ds[len(ds)-1])
-        if year != None:
+        if year != None:        # Fpr this case, the last token must be a year
             dayString=" ".join(ds[:-1])
             dayTuple=InterpretNamedDay(dayString)
             if dayTuple != None:
                 return datetime.datetime(year, dayTuple[0], dayTuple[1]).date()
 
     # Case: late/early <month> <year>  ("Late October 1999")
-    # We recognize this by seeing three tokens separated by whitespace, with the first "late", "mid" or "early", the second a month name and the third a number
+    # We recognize this by seeing three or more tokens separated by whitespace, with the first comprising a recognized string, the second-last a month name and the last a year
     ds = dateStr.replace(",", " ").replace("-", " ").lower().split()
-    if len(ds) == 3:
-        if ds[0].lower() == "early":
+    if len(ds) >= 3:
+        if len(ds) > 3:                 # If there's more than one early token, recombine just the early tokens.
+            temp=" ".join(ds[:-2])
+            ds=(temp, ds[len(ds)-2], ds[len(ds)-1])
+        if ds[0] == "early":
             day = 8
-        if ds[0].lower() == "mid":
+        if ds[0] == "early in":
+            day = 8
+        if ds[0] == "mid":
             day = 15
-        if ds[0].lower() == "middle":
+        if ds[0] == "middle":
             day = 15
-        if ds[0].lower() == "late":
+        if ds[0] == "late":
             day = 24
+        if ds[0] == "end of":
+            day=28
+        if ds[0] == "around the end of":
+            day=28
+
         if day != None:
             month = InterpretMonth(ds[1])
             year = InterpretYear(ds[2])

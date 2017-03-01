@@ -249,7 +249,7 @@ for title in fanzines:
 
             if year != None:    # We must have a year.
                 try:
-                    date=datetime.datetime(year, month, day).date()
+                    date=Helpers.Date(year, month, day)
                 except:
                     print("   ***BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
                     date=None

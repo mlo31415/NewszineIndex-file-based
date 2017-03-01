@@ -1,4 +1,5 @@
 import datetime
+from calendar import monthrange
 
 
 #*******************************************************************
@@ -27,6 +28,31 @@ def ExtractTaggedStuff(string, start, tag):
 
 # ---------------------------------------------------------------------
 def Date(year, month, day):
+    if day == None  or  month == None or year == None:
+        return None
+
+    # We want to deal with days that are just outside the month's range -- anything more than about 10 days is probably not deliberate,
+    # but some sort of parsing error feeding in garbage data.
+
+    # First deal with dates later than the month's range
+    dayrange=monthrange(year, month)
+    if day > dayrange[1] and day <40:
+        day=day-dayrange[1]
+        month=month+1
+        if month > 12:
+            month=month-12
+            year=year+1
+
+    # Now deal with days before the start of the month
+    if day < 1 and day > -10:
+        month=month-1
+        if month < 1:
+            month=12
+            year=year-1
+        dayrange=monthrange(year, month)
+        day=dayrange[1]-day
+
+    # Returning you now to your mundane date function...
     return datetime.datetime(year, month, day).date()
 
 

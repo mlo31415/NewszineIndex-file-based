@@ -4,7 +4,7 @@
 # The opening tag is assumed to be of the form "<tag...>" (where "..." is random stuff)
 # The closing tag is assumed to be "</tag>"
 # String will be treated in a case-insensitive way
-def extractTaggedStuff(string, start, tag):
+def ExtractTaggedStuff(string, start, tag):
     begin=string.lower().find("<"+tag.lower(), start)
     if begin < start:
         return None
@@ -133,7 +133,7 @@ def InterpretNamedDay(dayString):
     except:
         return None
 
-def InterpretRaletiveWords(daystring):
+def InterpretRelativeWords(daystring):
     conversionTable={
         "early": 8,
         "early in": 8,
@@ -148,7 +148,7 @@ def InterpretRaletiveWords(daystring):
 
 #---------------------------------------------------
 # Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
-def interpretDate(dateStr):
+def InterpretDate(dateStr):
     import datetime
 
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
@@ -241,7 +241,7 @@ def interpretDate(dateStr):
 #---------------------------------------------------
 # Try to make sense of the date information supplied as separate
 # Unknown input arguments should be None
-def interpretDayMonthYear(dayStr, monthStr, yearStr):
+def InterpretDayMonthYear(dayStr, monthStr, yearStr):
     import datetime
     import time
 

@@ -78,7 +78,7 @@ for dir in dirList:
         contents=file.read()
 
     # Get the <title>
-    t=Helpers.extractTaggedStuff(contents, 0, "title")
+    t=Helpers.ExtractTaggedStuff(contents, 0, "title")
     if t == None:
         print("  ***Could not find <title>...</title>.  Aborting.")
         continue
@@ -86,12 +86,12 @@ for dir in dirList:
     loc=t[1]
 
     # Try to find the first two tables
-    t=Helpers.extractTaggedStuff(contents, loc, "table")    # Ignored first table
+    t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
     if t == None:
         print("  ***Could not find first <table>.  Aborting.")
         continue
     loc=t[1]
-    t=Helpers.extractTaggedStuff(contents, loc, "table")
+    t=Helpers.ExtractTaggedStuff(contents, loc, "table")
     if t == None:
         print("  ***Could not find second <table>.  Aborting.")
         continue
@@ -108,7 +108,7 @@ for dir in dirList:
     # The first row (bounded by <tr> tags) should be column headers bounded by <th> tags.
     # We will loop until we run out of <th> tags
     columns=[]
-    t=Helpers.extractTaggedStuff(tableText, 0, "tr")
+    t=Helpers.ExtractTaggedStuff(tableText, 0, "tr")
     if t == None:
         print("  ***Could not find column headers row.  Aborting.")
         continue
@@ -116,7 +116,7 @@ for dir in dirList:
     endheaders=t[1]
     loc=0
     while True:
-        t=Helpers.extractTaggedStuff(headers, loc, "th")
+        t=Helpers.ExtractTaggedStuff(headers, loc, "th")
         if t == None:
             break
         columns.append(t[0])
@@ -130,7 +130,7 @@ for dir in dirList:
     loc=endheaders
     while True:     # Loop over rows
         row=()
-        t=Helpers.extractTaggedStuff(tableText, loc, "tr")
+        t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")
         if t == None:
             break
         rowText=t[0]
@@ -139,7 +139,7 @@ for dir in dirList:
             break
         loc=0
         while True: # Loop over columns in row
-            t = Helpers.extractTaggedStuff(rowText, loc, "td")
+            t = Helpers.ExtractTaggedStuff(rowText, loc, "td")
             if t == None:
                 break
             row=row+(t[0],)
@@ -215,7 +215,7 @@ for title in fanzines:
         date=None
         try:
             dateField=tableRow[columnHeaders.index("Date")]
-            date=Helpers.interpretDate(dateField)
+            date=Helpers.InterpretDate(dateField)
             if date == None:
                 print("   ***"+title+": date interpretation failed, date=" + dateField)
         except ValueError:

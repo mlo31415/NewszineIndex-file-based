@@ -1,3 +1,6 @@
+import datetime
+
+
 #*******************************************************************
 # Extract something bounded by <string></string>
 # tag is not decorated with "<" or ">" or "/"
@@ -21,6 +24,12 @@ def ExtractTaggedStuff(string, start, tag):
     # We return a tuple, containing the string found and the ending position of the string found in the input string
     return (string[begin:end], end+len(tag)+3)
 
+
+# ---------------------------------------------------------------------
+def Date(year, month, day):
+    return datetime.datetime(year, month, day).date()
+
+
 # ---------------------------------------------------------------------
 def InterpretInt(intstring):
     try:
@@ -30,10 +39,27 @@ def InterpretInt(intstring):
 
 #---------------------------------------------------------------------
 def InterpretYear(yearstring):
-    if len(yearstring) != 2 and len(yearstring) != 4:
-        return None
+    # Remove leading and trailing cruft
+    cruft=['.']
+    while len(yearstring) > 0  and  yearstring[0] in cruft:
+        yearstring=yearstring[1:]
+    while len(yearstring) > 0  and  yearstring[:-1] in cruft:
+        yearstring=yearstring[:-1]
 
-    return InterpretInt(yearstring)
+    # Handle 2-digit years
+    if len(yearstring) == 2:
+        year2=InterpretInt(yearstring)
+        if year2 == None:
+            return None
+        if year2 < 30:  # We handle the years 1930-2029
+            return 2000+year2
+        return 1900+year2
+
+    # 4-digit years are easier...
+    if len(yearstring) == 4:
+        return InterpretInt(yearstring)
+
+    return None
 
 #---------------------------------------------------------------------
 def InterpretMonth(monthstring):
@@ -146,6 +172,7 @@ def InterpretRelativeWords(daystring):
         "early in": 8,
         "mid": 15,
         "middle": 15,
+        "?": 15,
         "middle-late": 19,
         "late": 24,
         "end of": 28,
@@ -161,7 +188,6 @@ def InterpretRelativeWords(daystring):
 #---------------------------------------------------
 # Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
 def InterpretDate(dateStr):
-    import datetime
 
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
 
@@ -170,14 +196,14 @@ def InterpretDate(dateStr):
     day=None
 
     # Some names are of the form "<named day> year" as in "Christmas, 1955" of "Groundhog Day 2001"
-    ds=dateStr.replace(",", " ").replace("-", " ").lower().split()  # We ignore hyphens and commans
+    ds=dateStr.replace(",", " ").replace("-", " ").lower().split()  # We ignore hyphens and commas
     if len(ds) > 1:
         year=InterpretYear(ds[len(ds)-1])
         if year != None:        # Fpr this case, the last token must be a year
             dayString=" ".join(ds[:-1])
             dayTuple=InterpretNamedDay(dayString)
             if dayTuple != None:
-                return datetime.datetime(year, dayTuple[0], dayTuple[1]).date()
+                return Date(year, dayTuple[0], dayTuple[1])
 
     # Case: late/early <month> <year>  ("Late October 1999")
     # We recognize this by seeing three or more tokens separated by whitespace, with the first comprising a recognized string, the second-last a month name and the last a year
@@ -192,7 +218,7 @@ def InterpretDate(dateStr):
             month = InterpretMonth(ds[1])
             year = InterpretYear(ds[2])
             if month != None and year != None:
-                return datetime.datetime(year, month, day).date()
+                return Date(year, month, day)
 
     # Case:  <Month> <year>  ("October 1984", "Jun 73", etc.  Possibly including a comma after the month)
     # We recognize this by seeing two tokens separate by whitespace, with the first a month name and the second a number
@@ -201,7 +227,7 @@ def InterpretDate(dateStr):
         month=InterpretMonth(ds[0])
         year=InterpretYear(ds[1])
         if month != None and year != None:
-            return datetime.datetime(year, month, 1).date()
+            return Date(year, month, 1)
 
 
     # Case:  mm/dd/yy or mm/dd/yyyy
@@ -210,7 +236,7 @@ def InterpretDate(dateStr):
         day=InterpretInt(ds[1])
         month=InterpretInt(ds[0])
         year=InterpretInt(ds[2])
-        return datetime.datetime(year, month, day).date()
+        return Date(year, month, day)
 
     # Case: October 11, 1973 or 11 October 1973
     # We want there to be three tokens, the last one to be a year and one of the first two tokens to be a number and the other to be a month name
@@ -223,19 +249,18 @@ def InterpretDate(dateStr):
             d0=InterpretInt(ds[0])
             d1=InterpretInt(ds[1])
             if m0 != None and d1 != None:
-                return datetime.datetime(year, m0, d1).date()
+                return Date(year, m0, d1)
             if m1 != None and d0 != None:
-                return datetime.datetime(year, m1, d0).date()
+                return Date(year, m1, d0)
 
-    # Case: A 4-digit year by itself
-    if len(dateStr) == 4:
-        year=InterpretYear(dateStr)
-        if year == None:
-            return None
-        try:
-            return datetime.datetime(year, 1, 1).date()
-        except:
-            return None
+    # Case: A 2-digit or 4-digit year by itself
+    year=InterpretYear(dateStr)
+    if year == None:
+        return None
+    try:
+        return Date(year, 1, 1)
+    except:
+        return None
 
 #---------------------------------------------------
 # Try to make sense of the date information supplied as separate
@@ -267,7 +292,7 @@ def InterpretDayMonthYear(dayStr, monthStr, yearStr):
         day=1
     if month == None:
         month=1
-    return datetime.datetime(year, month, day).date()
+    return Date(year, month, day)
 
 
 #-------------------------------------------------------------------

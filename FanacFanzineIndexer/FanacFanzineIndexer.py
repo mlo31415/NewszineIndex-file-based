@@ -34,10 +34,12 @@ singleIssueDirectories=["Abstract", "Acolyte", "BNF_of_IZ", "Chanticleer", "Cons
                         "SF_Digest", "SF_Digest_2", "SFSFS", "SpaceDiversions", "SpaceFlight", "SpaceMagazine",
                         "Starlight", "SunSpots", "Tomorrow", "Vanations", "Vertigo", "WildHair", "Willis_Papers", "X", "Yandro"]
 
-nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood", "Bids_etc", "Boskone", "Chicon", "Clevention", "Constellation",
-                        "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
-                        "Gotterdammerung", "Helios", "IGOTS", "Iguanacon", "Loncon", "Lunacon", "Mimosa", "Minicon", "Miscellaneous",
-                        "Monster", "NebulaAwardsBanquet", "NEOSFS", "Nolacon", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Philcon", "Pittcon",
+nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood", "Beyond the Enchanted Duplicator to the Enchanted Convention",
+                        "Bids_etc", "Boskone", "Bullsheet", "Chicon", "Cinvention", "Clevention",
+                        "ConStellation", "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
+                        "Gotterdammerung", "Helios", "IGOTS", "IguanaCon", "Interaction", "LASFS", "Loncon", "Lunacon",
+                        "MagiCon Original Bookmark Anthology", "Mimosa", "Minicon", "Miscellaneous",
+                        "Monster", "NebulaAwardsBanquet", "NEOSFS", "Nolacon", "NOLAzine", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Philcon", "Pittcon",
                         "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"}
 
 # Get a list of all the directories in the directory.
@@ -169,7 +171,8 @@ synonyms={
     "Vol./#" : "Volume",
     "Day" : "Day",
     "Date" : "Date",
-    "Issue Date" : "Date"
+    "Issue Date" : "Date",
+    "Published": "Date"
 }
 
 # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
@@ -183,6 +186,8 @@ ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Descr
 #   HTML link
 
 # The data will be stored in a new dictionary with the same structure as "fanzines"
+# The keys will be the title
+# The value will be a list of tuples of (date, hyperlink)
 standardized={}
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
@@ -207,6 +212,7 @@ for title in fanzines:
         # The rest of the rows are data rows.
         # The next step is to try to make sense of the date information and to generate a date for each issue.
         # First see if there's a date field
+        date=None
         try:
             dateField=tableRow[columnHeaders.index("Date")]
             date=Helpers.interpretDate(dateField)
@@ -243,15 +249,40 @@ for title in fanzines:
 
             if year != None:    # We must have a year.
                 try:
-                    date=datetime.datetime(year, month, day).date
+                    date=datetime.datetime(year, month, day).date()
                 except:
                     print("   ***BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
                     date=None
 
         if date == None:
-            print("   ***NO DATE. Title= "+title+ "   Table row="+" ".join(tableRow))
+            print("   ***NO DATE FOUND. Title= "+title+ "   Table row="+" ".join(tableRow))
+            continue
 
         # Now we need to figure out where the links are...
+        # If there is only one hyperlink/row, that has to be it.  Otherwise...
+        for cell in tableRow:
+            hyperlink=Helpers.Hyperlink(cell)
+            if hyperlink == None:
+                continue
 
+            if title in standardized:
+                standardized[title].append((date, hyperlink))
+            else:
+                standardized[title]=[(date, hyperlink)]
+
+# Now it's time to generate output.  We convert standardized into something suitable for sorting.
+# We create a list of tuples (title, date, hyperlink)
+
+listOfIssues=[]
+for title in standardized:
+    list=standardized[title]
+    for t in list:
+        listOfIssues.append((title, t[0], t[1]))
+
+listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
+
+# Now print the list
+#for item in listOfIssues:
+#    print(str(item[1])+"  "+item[0]+":  "+item[2])
 
 i=0

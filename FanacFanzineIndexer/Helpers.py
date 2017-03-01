@@ -21,12 +21,19 @@ def extractTaggedStuff(string, start, tag):
     # We return a tuple, containing the string found and the ending position of the string found in the input string
     return (string[begin:end], end+len(tag)+3)
 
-#---------------------------------------------------------------------
-def InterpretYear(yearstring):
+# ---------------------------------------------------------------------
+def InterpretInt(intstring):
     try:
-        return int(yearstring)
+        return int(intstring)
     except:
         return None
+
+#---------------------------------------------------------------------
+def InterpretYear(yearstring):
+    if len(yearstring) != 2 and len(yearstring) != 4:
+        return None
+
+    return InterpretInt(yearstring)
 
 #---------------------------------------------------------------------
 def InterpretMonth(monthstring):
@@ -84,6 +91,7 @@ def InterpretNamedDay(dayString):
         "edgar allan poe's birthday": (1, 19),
         "groundhog day": (2, 4),
         "canadian national flag day": (2, 15),
+        "national flag day": (2, 15),
         "chinese new year": (2, 15),
         "lunar new year": (2, 15),
         "leap day": (2, 29),
@@ -99,6 +107,7 @@ def InterpretNamedDay(dayString):
         "victoria day": (5, 22),
         "world no tobacco day": (5, 31),
         "world environment day": (6, 5),
+        "summer solstice": (6,21),
         "canada day": (7, 1),
         "stampede": (7, 10),
         "stampede rodeo": (7, 10),
@@ -124,16 +133,29 @@ def InterpretNamedDay(dayString):
     except:
         return None
 
+def InterpretRaletiveWords(daystring):
+    conversionTable={
+        "early": 8,
+        "early in": 8,
+        "mid": 15,
+        "middle": 15,
+        "middle-late": 19,
+        "late": 24,
+        "end of": 28,
+        "the end of": 28,
+        "around the end of": 28
+    }
+
 #---------------------------------------------------
 # Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
 def interpretDate(dateStr):
     import datetime
 
-    day=None
-    month=None
-    year=None
-
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
+
+    year=None
+    month=None
+    day=None
 
     # Some names are of the form "<named day> year" as in "Christmas, 1955" of "Groundhog Day 2001"
     ds=dateStr.replace(",", " ").replace("-", " ").lower().split()  # We ignore hyphens and commans
@@ -186,37 +208,35 @@ def interpretDate(dateStr):
     # Case:  mm/dd/yy or mm/dd/yyyy
     ds=dateStr.split("/")
     if len(ds) == 3:
-        day=int(ds[1])
-        month=int(ds[0])
-        year=int(ds[2])
+        day=InterpretInt(ds[1])
+        month=InterpretInt(ds[0])
+        year=InterpretInt(ds[2])
         return datetime.datetime(year, month, day).date()
 
-    # Case: October 11, 1973
+    # Case: October 11, 1973 or 11 October 1973
+    # We want there to be three tokens, the last one to be a year and one of the first two tokens to be a number and the other to be a month name
     ds=dateStr.replace(",", " ").split()
     if len(ds) == 3:
-        month=InterpretMonth(ds[0])
-        if month != None:
-            day=int(ds[1])
-            year=int(ds[2])
-            return datetime.datetime(year, month, day).date()
-
-    # Case: 11 October 1973
-    ds=dateStr.replace(",", " ").split()
-    if len(ds) == 3:
-        month=InterpretMonth(ds[1])
-        if month != None:
-            day=int(ds[0])
-            year=int(ds[2])
-            return datetime.datetime(year, month, day).date()
+        year=InterpretYear(ds[2])
+        if year != None:
+            m0=InterpretMonth(ds[0])
+            m1=InterpretMonth(ds[1])
+            d0=InterpretInt(ds[0])
+            d1=InterpretInt(ds[1])
+            if m0 != None and d1 != None:
+                return datetime.datetime(year, m0, d1).date()
+            if m1 != None and d0 != None:
+                return datetime.datetime(year, m1, d0).date()
 
     # Case: A 4-digit year by itself
     if len(dateStr) == 4:
+        year=InterpretYear(dateStr)
+        if year == None:
+            return None
         try:
-            return datetime.datetime(int(dateStr), 1, 1).fate()
+            return datetime.datetime(year, 1, 1).date()
         except:
-            year=None
-
-    return None
+            return None
 
 #---------------------------------------------------
 # Try to make sense of the date information supplied as separate
@@ -249,4 +269,25 @@ def interpretDayMonthYear(dayStr, monthStr, yearStr):
     if month == None:
         month=1
     return datetime.datetime(year, month, day).date()
+
+
+#-------------------------------------------------------------------
+# Find a hyperlink in a strong, returning either the hyperlink or None
+def Hyperlink(string):
+
+    # A hyperlink will be of the form <A HREF=["hyperlink"]>...<A>
+    lcString=string.lower()
+    loc=lcString.find("<a")
+    if loc < 0:
+        return None
+
+    loc=lcString.find('href="', loc)
+    if loc < 0:
+        return None
+
+    start=loc+len('href="')
+
+    end=lcString.find('">', start)
+
+    return string[start:end]
 

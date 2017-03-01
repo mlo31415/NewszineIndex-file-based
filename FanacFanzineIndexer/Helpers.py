@@ -153,6 +153,11 @@ def InterpretRelativeWords(daystring):
         "around the end of": 28
     }
 
+    try:
+        return conversionTable[daystring.replace(",", " ").replace("-", " ").lower()]
+    except:
+        return None
+
 #---------------------------------------------------
 # Try to make sense of a date string which might be like "10/22/85" or like "October 1984" or just funky randomness
 def InterpretDate(dateStr):
@@ -181,20 +186,7 @@ def InterpretDate(dateStr):
         if len(ds) > 3:                 # If there's more than one early token, recombine just the early tokens.
             temp=" ".join(ds[:-2])
             ds=(temp, ds[len(ds)-2], ds[len(ds)-1])
-        if ds[0] == "early":
-            day = 8
-        if ds[0] == "early in":
-            day = 8
-        if ds[0] == "mid":
-            day = 15
-        if ds[0] == "middle":
-            day = 15
-        if ds[0] == "late":
-            day = 24
-        if ds[0] == "end of":
-            day=28
-        if ds[0] == "around the end of":
-            day=28
+        day=InterpretRelativeWords(ds[0])
 
         if day != None:
             month = InterpretMonth(ds[1])

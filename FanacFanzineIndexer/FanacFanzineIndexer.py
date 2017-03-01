@@ -38,7 +38,7 @@ nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood",
                         "Bids_etc", "Boskone", "Bullsheet", "Chicon", "Cinvention", "Clevention",
                         "ConStellation", "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
                         "Gotterdammerung", "Helios", "IGOTS", "IguanaCon", "Interaction", "LASFS", "Loncon", "Lunacon",
-                        "MagiCon Original Bookmark Anthology", "Mimosa", "Minicon", "Miscellaneous",
+                        "MagiCon", "Mimosa", "Minicon", "Miscellaneous",
                         "Monster", "NebulaAwardsBanquet", "NEOSFS", "Nolacon", "NOLAzine", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Philcon", "Pittcon",
                         "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"}
 

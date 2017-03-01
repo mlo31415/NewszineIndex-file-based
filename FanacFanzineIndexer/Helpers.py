@@ -133,7 +133,8 @@ def InterpretMonth(monthstring):
 
 #-----------------------------------------------------
 # Handle dates like "Thanksgiving"
-# Returns a month/day tuple
+# Returns a month/day tuple which will often be exactly correct and rarely off by enough to matter
+# Note that we don't (currently) attempt to handle moveable feasts by taking the year in account
 def InterpretNamedDay(dayString):
     namedDayConverstionTable={
         "unknown": (1, 1),
@@ -160,8 +161,8 @@ def InterpretNamedDay(dayString):
         "world no tobacco day": (5, 31),
         "world environment day": (6, 5),
         "great flood": (6, 19),      # Opuntia, 2013 Calgary floods
-        "summer solstice": (6,21),
-        "world wide party": (6,21),
+        "summer solstice": (6, 21),
+        "world wide party": (6, 21),
         "canada day": (7, 1),
         "stampede": (7, 10),
         "stampede rodeo": (7, 10),
@@ -192,8 +193,12 @@ def InterpretNamedDay(dayString):
     except:
         return None
 
+#-----------------------------------------------------------------------
+# Deal with situtions like "late December"
+# We replace the vague relative term by a non-vague (albeit unreasonably precise) number
 def InterpretRelativeWords(daystring):
     conversionTable={
+        "start of": 1,
         "early": 8,
         "early in": 8,
         "mid": 15,
@@ -201,9 +206,9 @@ def InterpretRelativeWords(daystring):
         "?": 15,
         "middle-late": 19,
         "late": 24,
-        "end of": 28,
-        "the end of": 28,
-        "around the end of": 28
+        "end of": 30,
+        "the end of": 30,
+        "around the end of": 30
     }
 
     try:

@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import filedialog
-import os.path
+import os
 import Helpers
 import collections
 
@@ -348,7 +348,8 @@ for title in standardizedFanzines:
 listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
 
 # Now print the list
+out=open("output data.txt", "w")
 for item in listOfIssues:
-    print(str(item[1])+"  "+str(item[0])+":  "+str(item[2])+" --> "+str(item[3]))
-
+    print(str(item[1])+"  \t"+str(item[0])+":  \t"+str(item[2])+"  \t"+str(item[3]), file=out)
+out.close()
 i=0

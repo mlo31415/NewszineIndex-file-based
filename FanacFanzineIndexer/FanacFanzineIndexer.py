@@ -154,8 +154,8 @@ for dir in dirList:
 
 # OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
 # Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
-# Here is the tables of synomyms
-synonyms={
+# Here is the tables of synomyms for columns we actually use
+columnSynonyms={
     "Month" : "Month",
     "Mo." : "Month",
     "Quarter/Month" : "Month",
@@ -205,8 +205,8 @@ for title in fanzines:
                 if header in ignoreColumns:
                     columnHeaders.append("ignored")
                 else:
-                    if header in synonyms:
-                        columnHeaders.append(synonyms[header])
+                    if header in columnSynonyms:
+                        columnHeaders.append(columnSynonyms[header])
                     else:
                         print("   ***"+title+": Column header not recognized:  "+header)
                         columnHeaders.append("not recognized")

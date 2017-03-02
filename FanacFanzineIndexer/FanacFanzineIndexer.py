@@ -219,6 +219,7 @@ for title in fanzines:
             continue
 
         # The rest of the rows are data rows.
+
         # The next step is to try to make sense of the date information and to generate a date for each issue.
         # First see if there's a date field
         date=None
@@ -271,13 +272,15 @@ for title in fanzines:
         # If there is only one hyperlink/row, that has to be it.  Otherwise...
         for cell in tableRow:
             hyperlink=Helpers.Hyperlink(cell)
-            if hyperlink == None:
-                continue
+            if hyperlink != None:   # For now, just use the first hyperlink found
+                if title in standardizedFanzines:
+                    standardizedFanzines[title].append(IssueData(date, None, hyperlink))
+                else:
+                    standardizedFanzines[title]=[IssueData(date, None, hyperlink)]
+                break
 
-            if title in standardizedFanzines:
-                standardizedFanzines[title].append(IssueData(date, None, hyperlink))
-            else:
-                standardizedFanzines[title]=[IssueData(date, None, hyperlink)]
+        # Next we find (or construct) the issue title
+        # Sometimes there's an issue title, sometimes there isn't. (The data's a real mess!)
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
 for dir in singleIssueDirectories:
@@ -286,8 +289,9 @@ for dir in singleIssueDirectories:
 #=================================
 # Step 3
 
-# Now it's time to generate output.  We convert standardized into something suitable for sorting.
-# We create a list of tuples (title, date, hyperlink)
+# Now it's time to generate output.
+# We must convert the data in standardizedFanzines into something suitable for sorting, which means a list of tuples
+# We create a list of tuples (fanzine title, issue date, issue title, issue hyperlink)
 listOfIssues=[]
 for title in standardizedFanzines:
     list=standardizedFanzines[title]

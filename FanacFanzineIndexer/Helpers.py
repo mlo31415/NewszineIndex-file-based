@@ -369,3 +369,10 @@ def StripHyperlink(text):
     return text.replace("&nbsp;", " ")
 
 
+#----------------------------------------------------------------------
+# Get the index of an entry in a list or return None
+def GetIndex(list, str):
+    try:
+        return list.index(str)
+    except:
+        return None

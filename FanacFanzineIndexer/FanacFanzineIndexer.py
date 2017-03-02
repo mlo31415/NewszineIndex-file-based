@@ -174,8 +174,8 @@ columnSynonyms={
     "Volume" : "Volume",
     "Vol" : "Volume",
     "Vol." : "Volume",
-    "Vol/#" : "Volume",
-    "Vol./#" : "Volume",
+    "Vol/#" : "Vol/#",
+    "Vol./#" : "Vol/#",
     "Day" : "Day",
     "Date" : "Date",
     "Issue Date" : "Date",
@@ -297,16 +297,10 @@ for title in fanzines:
         # We can deal with some of these, anyway.
         issueTitle=None
         # We'll start by scanning the column headers looking for "title" and "issue"
-        try:
-            indexIssue=columnHeaders.index("Issue")
-        except:
-            indexIssue=None
+        indexIssue=Helpers.GetIndex(columnHeaders, "Issue")
+        indexTitle=Helpers.GetIndex(columnHeaders, "Title")
 
-        try:
-            indexTitle=columnHeaders.index("Title")
-        except:
-            indexTitle=None
-
+        issueTitle=None
         if indexIssue != None and indexTitle == None:
             issueTitle=tableRow[indexIssue]
         elif indexIssue == None and indexTitle != None:
@@ -315,9 +309,13 @@ for title in fanzines:
             # For now we'll use Title, but this may need to be improved
             issueTitle=tableRow[indexTitle]
         else:
-            issueTitle=None     # Placeholder for some fancy code to be written
+            # There are a bunch of cases to deal with here
+            # Case: There is a column "Vol/#"
+            indexVolNo=Helpers.GetIndex(columnHeaders, "Vol/#")
+            if indexVolNo != None:
+                issueTitle=title+" "+tableRow[indexVolNo]
 
-        #The issueTitle is frequently the display text for a hyperlink. Extract the display text.
+        # The issueTitle is frequently the display text for a hyperlink. Extract the display text.
         if issueTitle != None:
             issueTitle=Helpers.StripHyperlink(issueTitle)
 
@@ -350,6 +348,6 @@ listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
 # Now print the list
 out=open("output data.txt", "w")
 for item in listOfIssues:
-    print(str(item[1])+"  \t"+str(item[0])+":  \t"+str(item[2])+"  \t"+str(item[3]), file=out)
+    print(str(item[1])+"  \t"+str(item[0])+"  \t"+str(item[2])+"  \t"+str(item[3]), file=out)
 out.close()
 i=0

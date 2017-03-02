@@ -1,10 +1,8 @@
 import tkinter
 from tkinter import filedialog
-import datetime
-import os
 import os.path
-import xml.etree.ElementTree as ET
 import Helpers
+import collections
 
 # Get the directory containing the copy of the fanac.org website to be analyzed.
 root = tkinter.Tk()
@@ -44,6 +42,9 @@ nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood",
 
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
+
+#=================================
+#  Step 1
 
 # Walk the list of directories and create fanzines
 # fanzines is a dictionary (indexed by name) with each element being tuple consisting of the directory name and the index table
@@ -152,6 +153,9 @@ for dir in dirList:
     # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
     fanzines[title]=(dir, table)
 
+#=================================
+# Step 2
+
 # OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
 # Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
 # Here is the tables of synomyms for columns we actually use
@@ -185,13 +189,14 @@ ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Descr
 
 # For each issue, we want the following:
 #   Date
-#   Issue designator (Vol/Num or just Num)
+#   Issue title (Vol/Num or just Num)
 #   HTML link
 
 # The data will be stored in a new dictionary with the same structure as "fanzines"
-# The keys will be the title
-# The value will be a list of tuples of (date, hyperlink)
-standardized={}
+# The keys will be the fanzine title
+# The value will be a list of namedtuples of (date, issue, hyperlink)
+standardizedFanzines={}
+IssueData=collections.namedtuple("IssueData", ["date", "issue", "hyperlink"])
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
 for title in fanzines:
@@ -269,28 +274,30 @@ for title in fanzines:
             if hyperlink == None:
                 continue
 
-            if title in standardized:
-                standardized[title].append((date, hyperlink))
+            if title in standardizedFanzines:
+                standardizedFanzines[title].append(IssueData(date, None, hyperlink))
             else:
-                standardized[title]=[(date, hyperlink)]
+                standardizedFanzines[title]=[IssueData(date, None, hyperlink)]
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
 for dir in singleIssueDirectories:
-    i=0
+    i=0 # This is a placeholder stub
+
+#=================================
+# Step 3
 
 # Now it's time to generate output.  We convert standardized into something suitable for sorting.
 # We create a list of tuples (title, date, hyperlink)
-
 listOfIssues=[]
-for title in standardized:
-    list=standardized[title]
-    for t in list:
-        listOfIssues.append((title, t[0], t[1]))
+for title in standardizedFanzines:
+    list=standardizedFanzines[title]
+    for issue in list:
+        listOfIssues.append((title, issue.date, issue.issue, issue.hyperlink))
 
 listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
 
 # Now print the list
 #for item in listOfIssues:
-#    print(str(item[1])+"  "+item[0]+":  "+item[2])
+#    print(str(item[1])+"  "+item[0]+":  "+item[3])
 
 i=0

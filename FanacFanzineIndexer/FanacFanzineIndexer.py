@@ -176,6 +176,7 @@ columnSynonyms={
     "Vol." : "Volume",
     "Vol/#" : "Vol/#",
     "Vol./#" : "Vol/#",
+    "Title" : "Title",
     "Day" : "Day",
     "Date" : "Date",
     "Issue Date" : "Date",
@@ -183,7 +184,7 @@ columnSynonyms={
 }
 
 # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
-ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors", "Date, Notes",
+ignoreColumns=["Headline", "Pages", "Notes", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors", "Date, Notes",
                "Editor/s", "Author/Artist", "Repro", "Publication", "Pp.", "PoB", "LGP", "GP", "Size", "Publisher", "Publishers", "Fanzine", "APA", "Page", "Zine",
                "Author", "Art by", "Story by", "Type of Material", "Reprinted from:", "Content", "Sub-Title"]
 

@@ -28,7 +28,7 @@ if len(dirname) == 0:
 # The strategy here is to walk the entire fanzines directory and build up the structure of the entire directory before doing any processing.
 
 # Some directory formats are hard to recognize and/or archaic. They are listed by hand, here.
-singleIssueDirectories=["Abstract", "Acolyte", "BNF_of_IZ", "Chanticleer", "Constellation", "emu", "Enchanted_Duplicator",
+singleIssueDirectories=["Abstract", "BNF_of_IZ", "Chanticleer", "Constellation", "emu", "Enchanted_Duplicator",
                         "Entropy", "Fake", "Fan-Fare", "FanToSee", "kanga", "Leaflet", "LeeHoffman",
                         "les", "lindsay", "Mallophagan", "Masque", "Monster", "NewFrontiers", "NOSFAn", "Planeteer", "Sense_of_FAPA",
                         "SF_Digest", "SF_Digest_2", "SFSFS", "SpaceDiversions", "SpaceFlight", "SpaceMagazine",
@@ -206,6 +206,7 @@ for title in fanzines:
                         columnHeaders.append(synonyms[header])
                     else:
                         print("   ***"+title+": Column header not recognized:  "+header)
+                        columnHeaders.append("not recognized")
             firstTime=False
             continue
 
@@ -269,6 +270,10 @@ for title in fanzines:
                 standardized[title].append((date, hyperlink))
             else:
                 standardized[title]=[(date, hyperlink)]
+
+# Next we walk the list of singe-issue directories and try to extract the needed information
+for dir in singleIssueDirectories:
+    i=0
 
 # Now it's time to generate output.  We convert standardized into something suitable for sorting.
 # We create a list of tuples (title, date, hyperlink)

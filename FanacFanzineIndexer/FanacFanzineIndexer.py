@@ -165,11 +165,11 @@ columnSynonyms={
     "Quarter/Month" : "Month",
     "Season" : "Month",
     "Issue" : "Issue",
-    "#" : "Issue",
-    "Num" : "Issue",
-    "Number": "Issue",
-    "No" : "Issue",
-    "No," : "issue",
+    "#" : "Number",
+    "Num" : "Number",
+    "Number": "Number",
+    "No" : "Number",
+    "No," : "Number",
     "Year" : "Year",
     "Volume" : "Volume",
     "Vol" : "Volume",
@@ -196,7 +196,7 @@ ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Descr
 # The keys will be the fanzine title
 # The value will be a list of namedtuples of (date, issue, hyperlink)
 standardizedFanzines={}
-IssueData=collections.namedtuple("IssueData", ["date", "issue", "hyperlink"])
+issueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink"])
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
 for title in fanzines:
@@ -270,17 +270,64 @@ for title in fanzines:
 
         # Now we need to figure out where the links are...
         # If there is only one hyperlink/row, that has to be it.  Otherwise...
+        hyperlink=None
         for cell in tableRow:
             hyperlink=Helpers.Hyperlink(cell)
             if hyperlink != None:   # For now, just use the first hyperlink found
-                if title in standardizedFanzines:
-                    standardizedFanzines[title].append(IssueData(date, None, hyperlink))
-                else:
-                    standardizedFanzines[title]=[IssueData(date, None, hyperlink)]
                 break
 
         # Next we find (or construct) the issue title
         # Sometimes there's an issue title, sometimes there isn't. (The data's a real mess!)
+        # Worse, sometimes "Issue" is an issue number
+        # Examples:
+            # "<title> <n>" in column "Title"  (<n> is some sort of unique issue designator)  There is no column "Issue"
+            #       Starspinkle, Speculation, Skyrack, VOID
+            # "<title> <n>" in column "Issue"  (<n> is some sort of unique issue designator) There is no column "Title".
+            #       Winnie, Voice of the Imagi-Nation, Vega, Tympany, Tightbeam, Sylmarillion, The Sydney Futurian, Swefanac, Spang Blah, Spaceship, Skyhack, Shangri-LA, SF
+            #       SFinctor, SF Weekly, SF Times Germany, Scream, Scientifantasy, "Science, Fantasy, and Science Fiction", Science Fiction News (Australia), Science Fiction Newscope
+            # No title column, but Issue, Month, Day, Year columns exist
+            #       STEFcard
+            # Title column exists, but contains series title rather than issue title.  Issue, Month, Day, Year columns exist
+            #       Wastebasket, Vampire, Toto, Slant, Science Fiction Newsletter
+            # Fanzine column exists, but contains series title rather than issue title.  Issue, Month, Day, Year columns exist
+            #       Spacewarp
+            #  Inconsistant
+            #       Spaceways
+
+        # We can deal with some of these, anyway.
+        issueTitle=None
+        # We'll start by scanning the column headers looking for "title" and "issue"
+        try:
+            indexIssue=columnHeaders.index("Issue")
+        except:
+            indexIssue=None
+
+        try:
+            indexTitle=columnHeaders.index("Title")
+        except:
+            indexTitle=None
+
+        if indexIssue != None and indexTitle == None:
+            issueTitle=tableRow[indexIssue]
+        elif indexIssue == None and indexTitle != None:
+            issueTitle=tableRow[indexTitle]
+        elif indexIssue != None and indexTitle != None:
+            # For now we'll use Title, but this may need to be improved
+            issueTitle=tableRow[indexTitle]
+        else:
+            issueTitle=None     # Placeholder for some fancy code to be written
+
+        #The issueTitle is frequently the display text for a hyperlink. Extract the display text.
+        if issueTitle != None:
+            issueTitle=Helpers.StripHyperlink(issueTitle)
+
+        # OK, we have all the information we want from this TableRow (a single issue of a fanzine).
+        # Add it to the standardized fanzine list.
+        if title in standardizedFanzines:
+            standardizedFanzines[title].append(issueData(date, issueTitle, hyperlink))
+        else:
+            standardizedFanzines[title] = [issueData(date, issueTitle, hyperlink)]
+
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
 for dir in singleIssueDirectories:
@@ -296,12 +343,12 @@ listOfIssues=[]
 for title in standardizedFanzines:
     list=standardizedFanzines[title]
     for issue in list:
-        listOfIssues.append((title, issue.date, issue.issue, issue.hyperlink))
+        listOfIssues.append((title, issue.date, issue.title, issue.hyperlink))
 
 listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
 
 # Now print the list
-#for item in listOfIssues:
-#    print(str(item[1])+"  "+item[0]+":  "+item[3])
+for item in listOfIssues:
+    print(str(item[1])+"  "+str(item[0])+":  "+str(item[2])+" --> "+str(item[3]))
 
 i=0

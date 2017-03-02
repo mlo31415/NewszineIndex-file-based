@@ -341,8 +341,31 @@ def Hyperlink(string):
         return None
 
     start=loc+len('href="')
-
     end=lcString.find('">', start)
 
     return string[start:end]
+
+#--------------------------------------------------------------------
+# Strip the hyperlink stuff from around its display text
+def StripHyperlink(text):
+    # <A ...HREF=...>display text</A>
+    # We'll do this the quick and dirty way and assume that '<' and '>' are not used except in the html
+    # If we fail, we just pass the input text back out
+    text=text.strip()
+    if text == None or len(text) < 8:   # Bail if it's too short to contain a hyperlink
+        return text
+    if text[0:2].lower() != "<a":       # Bail if it doesn't start with "<A"
+        return text
+    if text[-4:].lower() != "</a>":     # Bail if it doesn't end with "</A>"
+        return text
+    loc=text.find(">")      # Find the ">" which ends the opening part of the HTML
+    if loc < 0:
+        return text
+
+    # OK, it looks like this is a hyperlink.  Strip it away
+    text=text[loc+1:-4]
+
+    # Now replace '&nbsp;' with spaces
+    return text.replace("&nbsp;", " ")
+
 

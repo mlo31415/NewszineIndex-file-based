@@ -176,8 +176,8 @@ synonyms={
 }
 
 # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
-ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors",
-               "Editor/s", "Author/Artist", "Repro", "Publication", "Pp.", "PoB", "LGP", "GP", "Size", "Publisher", "Fanzine", "APA", "Page", "Zine",
+ignoreColumns=["Headline", "Pages", "Notes", "Title", "Type", "PDF Size", "Description", "Country", "Editor/Publisher", "Contains", "Editor", "Editors", "Date, Notes",
+               "Editor/s", "Author/Artist", "Repro", "Publication", "Pp.", "PoB", "LGP", "GP", "Size", "Publisher", "Publishers", "Fanzine", "APA", "Page", "Zine",
                "Author", "Art by", "Story by", "Type of Material", "Reprinted from:", "Content", "Sub-Title"]
 
 # For each issue, we want the following:

@@ -46,7 +46,7 @@ nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood",
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
 
 # Walk the list of directories and create fanzines
-# fanzines is a dictionary (indexed by name) with each element being a list of row tuples
+# fanzines is a dictionary (indexed by name) with each element being tuple consisting of the directory name and the index table
 fanzines={}
 
 for dir in dirList:
@@ -124,8 +124,10 @@ for dir in dirList:
 
     print("   "+str(columns))
 
-    table=[]
-    table.append(columns)
+    # Create the index table
+    # It is a list of rows, with the first row being the header row
+    # Each row is a list of columns, so that a table is a 2-dimensional array stored as a list of lists
+    table=[columns]
     # OK. Now we decode the rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
     loc=endheaders
     while True:     # Loop over rows
@@ -147,7 +149,8 @@ for dir in dirList:
         loc=endrow
         table.append(row)
 
-    fanzines[title]=table
+    # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
+    fanzines[title]=(dir, table)
 
 # OK, now we've inhaled the structure of the fanzines part of the website.  Time to make sense of it
 # Unfortunately, the website is pretty sloppy and uses different headings on different pages for the same data, so we need to deal with that
@@ -192,7 +195,7 @@ standardized={}
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
 for title in fanzines:
-    table=fanzines[title]
+    table=fanzines[title][1]    # We want just the index table
     firstTime=True
     columnHeaders=[]
     for tableRow in table:

@@ -51,17 +51,17 @@ dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname,
 # fanzines is a dictionary (indexed by name) with each element being tuple consisting of the directory name and the index table
 fanzines={}
 
-for dir in dirList:
-    if dir in singleIssueDirectories:
-        print(dir+"  (single-issue -- skipped)")
+for directory in dirList:
+    if directory in singleIssueDirectories:
+        print(directory + "  (single-issue -- skipped)")
         continue
-    if dir in nonStandardDirectories:
-        print(dir+"  (non-standard -- skipped)")
+    if directory in nonStandardDirectories:
+        print(directory + "  (non-standard -- skipped)")
         continue
-    print(dir+" ...processing")
+    print(directory + " ...processing")
 
     # There should be an index.html file.  Open it.
-    indexfilename=os.path.join(dirname, dir,"index.html")
+    indexfilename=os.path.join(dirname, directory, "index.html")
     if not os.path.isfile(indexfilename):
         print("  ***Missing: "+indexfilename)
         continue
@@ -81,7 +81,7 @@ for dir in dirList:
 
     # Get the <title>
     t=Helpers.ExtractTaggedStuff(contents, 0, "title")
-    if t == None:
+    if t is None:
         print("  ***Could not find <title>...</title>.  Aborting.")
         continue
     title=t[0]
@@ -89,16 +89,15 @@ for dir in dirList:
 
     # Try to find the first two tables
     t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
-    if t == None:
+    if t is None:
         print("  ***Could not find first <table>.  Aborting.")
         continue
     loc=t[1]
     t=Helpers.ExtractTaggedStuff(contents, loc, "table")
-    if t == None:
+    if t is None:
         print("  ***Could not find second <table>.  Aborting.")
         continue
     tableText=t[0]
-    loc=t[1]
 
     # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
     tableText=tableText.replace("<p>", "").replace("<P>", "").replace("</p>", "").replace("</P>", "")
@@ -111,7 +110,7 @@ for dir in dirList:
     # We will loop until we run out of <th> tags
     columns=[]
     t=Helpers.ExtractTaggedStuff(tableText, 0, "tr")
-    if t == None:
+    if t is None:
         print("  ***Could not find column headers row.  Aborting.")
         continue
     headers=t[0]
@@ -119,7 +118,7 @@ for dir in dirList:
     loc=0
     while True:
         t=Helpers.ExtractTaggedStuff(headers, loc, "th")
-        if t == None:
+        if t is None:
             break
         columns.append(t[0])
         loc=t[1]
@@ -135,24 +134,24 @@ for dir in dirList:
     while True:     # Loop over rows
         row=()
         t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")
-        if t == None:
+        if t is None:
             break
         rowText=t[0]
         endrow=t[1]
-        if t == None:
+        if t is None:
             break
         loc=0
         while True: # Loop over columns in row
             t = Helpers.ExtractTaggedStuff(rowText, loc, "td")
-            if t == None:
+            if t is None:
                 break
-            row=row+(t[0],)
+            row += t[0],
             loc = t[1]
         loc=endrow
         table.append(row)
 
     # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
-    fanzines[title]=(dir, table)
+    fanzines[title]=(directory, table)
 
 #=================================
 # Step 2
@@ -228,13 +227,13 @@ for title in fanzines:
         try:
             dateField=tableRow[columnHeaders.index("Date")]
             date=Helpers.InterpretDate(dateField)
-            if date == None:
+            if date is None:
                 print("   ***"+title+": date interpretation failed, date=" + dateField)
         except ValueError:
             date=None
 
         # If the date field didn't work out(either because there was none or because it was uninterpretable), see if there are individual month, day and year fields.
-        if date == None:
+        if date is None:
             try:
                 yearField=tableRow[columnHeaders.index("Year")]
                 year=Helpers.InterpretYear(yearField)
@@ -247,7 +246,7 @@ for title in fanzines:
             except:
                 month=None
 
-            if month == None:
+            if month is None:
                 month=1     # If there's no readable month, assume we have a year only and date it January
 
             try:
@@ -256,17 +255,17 @@ for title in fanzines:
             except:
                 day=None
 
-            if day == None:
+            if day is None:
                 day=1       # If there's no readable day, assume we have a year and month only and date it the 1st
 
-            if year != None:    # We must have a year.
+            if year is not None:    # We must have a year.
                 try:
                     date=Helpers.Date(year, month, day)
                 except:
                     print("   ***BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
                     date=None
 
-        if date == None:
+        if date is None:
             print("   ***NO DATE FOUND. Title= "+title+ "   Table row="+" ".join(tableRow))
             continue
 
@@ -275,7 +274,7 @@ for title in fanzines:
         hyperlink=None
         for cell in tableRow:
             hyperlink=Helpers.Hyperlink(cell)
-            if hyperlink != None:   # For now, just use the first hyperlink found
+            if hyperlink is not None:   # For now, just use the first hyperlink found
                 break
 
         # Next we find (or construct) the issue title
@@ -297,42 +296,41 @@ for title in fanzines:
             #       Spaceways
 
         # We can deal with some of these, anyway.
-        issueTitle=None
         # We'll start by scanning the column headers looking for "title" and "issue"
         indexIssue=Helpers.GetIndex(columnHeaders, "Issue")
         indexTitle=Helpers.GetIndex(columnHeaders, "Title")
 
         issueTitle=None
-        if indexIssue != None and indexTitle == None:
+        if indexIssue is not None and indexTitle is None:
             issueTitle=tableRow[indexIssue]
-        elif indexIssue == None and indexTitle != None:
+        elif indexIssue is None and indexTitle is not None:
             issueTitle=tableRow[indexTitle]
-        elif indexIssue != None and indexTitle != None:
+        elif indexIssue is not None and indexTitle is not None:
             # For now we'll use Title, but this may need to be improved
             issueTitle=tableRow[indexTitle]
 
         # The issueTitle is frequently the display text for a hyperlink. If so, extract the display text which is all we want.
-        if issueTitle != None:
+        if issueTitle is not None:
             issueTitle=Helpers.StripHyperlink(issueTitle)
 
         # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
         # In that case, we can't use it
         pattern=re.compile("[0-9]")
-        if issueTitle != None and not re.search(pattern, issueTitle):
+        if issueTitle is not None and not re.search(pattern, issueTitle):
             print("   ***issueTitle does not have numbers: "+issueTitle)
             issueTitle=None
 
-        if issueTitle == None:
+        if issueTitle is None:
             # There are a bunch of cases to deal with here
             # Case: There is a column "Vol/#"
             indexVolNo=Helpers.GetIndex(columnHeaders, "Vol/#")
-            if indexVolNo != None:
+            if indexVolNo is not None:
                 issueTitle=title+" "+tableRow[indexVolNo]
 
             # Case: There is a "Number" column
-            if issueTitle == None:
+            if issueTitle is None:
                 indexNum=Helpers.GetIndex(columnHeaders, "Number")
-                if indexNum != None:
+                if indexNum is not None:
                     issueTitle=title+" "+tableRow[indexNum]
 
 
@@ -346,7 +344,7 @@ for title in fanzines:
 
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
-for dir in singleIssueDirectories:
+for directory in singleIssueDirectories:
     i=0 # This is a placeholder stub
 
 #=================================
@@ -355,17 +353,17 @@ for dir in singleIssueDirectories:
 # Now it's time to generate output.
 # We must convert the data in standardizedFanzines into something suitable for sorting, which means a list of tuples
 # We create a list of tuples (fanzine title, issue date, issue title, issue hyperlink)
-listOfIssues=[]
+sortableListOfIssues=[]
 for title in standardizedFanzines:
-    list=standardizedFanzines[title]
-    for issue in list:
-        listOfIssues.append((title, issue.date, issue.title, issue.hyperlink))
+    issueList=standardizedFanzines[title]
+    for issue in issueList:
+        sortableListOfIssues.append((title, issue.date, issue.title, issue.hyperlink))
 
-listOfIssues=sorted(listOfIssues, key=lambda t: t[1])
+sortableListOfIssues=sorted(sortableListOfIssues, key=lambda tp: tp[1])
 
 # Now print the list
 out=open("output data.txt", "w")
-for item in listOfIssues:
+for item in sortableListOfIssues:
     print(str(item[1])+"  \t"+str(item[0])+"  \t"+str(item[2])+"  \t"+str(item[3]), file=out)
 out.close()
 i=0

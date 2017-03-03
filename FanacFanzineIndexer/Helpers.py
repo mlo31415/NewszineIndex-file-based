@@ -16,19 +16,19 @@ def ExtractTaggedStuff(string, start, tag):
     begin=string.find(">", begin)
     if begin == -1:
         return None
-    begin=begin+1   # Need to skip over the ">"
+    begin += 1  # Need to skip over the ">"
 
     end=string.lower().find("</"+tag.lower()+">", begin)
     if end < begin:
         return None
 
     # We return a tuple, containing the string found and the ending position of the string found in the input string
-    return (string[begin:end], end+len(tag)+3)
+    return string[begin:end], end + len(tag) + 3
 
 
 # ---------------------------------------------------------------------
 def Date(year, month, day):
-    if day == None  or  month == None or year == None:
+    if day is None  or  month is None  or  year is None:
         return None
 
     # We want to deal with days that are just outside the month's range -- anything more than about 10 days is probably not deliberate,
@@ -36,16 +36,16 @@ def Date(year, month, day):
 
     # First deal with dates later than the month's range
     dayrange=monthrange(year, month)
-    if day > dayrange[1] and day <40:
+    if dayrange[1] < day < 40:
         day=day-dayrange[1]
-        month=month+1
+        month += 1
         if month > 12:
             month=month-12
-            year=year+1
+            year += 1
 
     # Now deal with days before the start of the month
-    if day < 1 and day > -10:
-        month=month-1
+    if 1 > day > -10:
+        month += 1
         if month < 1:
             month=12
             year=year-1
@@ -75,7 +75,7 @@ def InterpretYear(yearstring):
     # Handle 2-digit years
     if len(yearstring) == 2:
         year2=InterpretInt(yearstring)
-        if year2 == None:
+        if year2 is None:
             return None
         if year2 < 30:  # We handle the years 1930-2029
             return 2000+year2
@@ -222,18 +222,14 @@ def InterpretDate(dateStr):
 
     dateStr=dateStr.strip()  # Remove leading and trailing whitespace
 
-    year=None
-    month=None
-    day=None
-
     # Some names are of the form "<named day> year" as in "Christmas, 1955" of "Groundhog Day 2001"
     ds=dateStr.replace(",", " ").replace("-", " ").lower().split()  # We ignore hyphens and commas
     if len(ds) > 1:
         year=InterpretYear(ds[len(ds)-1])
-        if year != None:        # Fpr this case, the last token must be a year
+        if year is not None:        # Fpr this case, the last token must be a year
             dayString=" ".join(ds[:-1])
             dayTuple=InterpretNamedDay(dayString)
-            if dayTuple != None:
+            if dayTuple is not None:
                 return Date(year, dayTuple[0], dayTuple[1])
 
     # Case: late/early <month> <year>  ("Late October 1999")
@@ -245,10 +241,10 @@ def InterpretDate(dateStr):
             ds=(temp, ds[len(ds)-2], ds[len(ds)-1])
         day=InterpretRelativeWords(ds[0])
 
-        if day != None:
+        if day is not None:
             month = InterpretMonth(ds[1])
             year = InterpretYear(ds[2])
-            if month != None and year != None:
+            if month is not None and year is not None:
                 return Date(year, month, day)
 
     # Case:  <Month> <year>  ("October 1984", "Jun 73", etc.  Possibly including a comma after the month)
@@ -257,7 +253,7 @@ def InterpretDate(dateStr):
     if len(ds) == 2:
         month=InterpretMonth(ds[0])
         year=InterpretYear(ds[1])
-        if month != None and year != None:
+        if month is not None and year is not None:
             return Date(year, month, 1)
 
 
@@ -274,19 +270,19 @@ def InterpretDate(dateStr):
     ds=dateStr.replace(",", " ").split()
     if len(ds) == 3:
         year=InterpretYear(ds[2])
-        if year != None:
+        if year is not None:
             m0=InterpretMonth(ds[0])
             m1=InterpretMonth(ds[1])
             d0=InterpretInt(ds[0])
             d1=InterpretInt(ds[1])
-            if m0 != None and d1 != None:
+            if m0 is not None and d1 is not None:
                 return Date(year, m0, d1)
-            if m1 != None and d0 != None:
+            if m1 is not None and d0 is not None:
                 return Date(year, m1, d0)
 
     # Case: A 2-digit or 4-digit year by itself
     year=InterpretYear(dateStr)
-    if year == None:
+    if year is None:
         return None
     try:
         return Date(year, 1, 1)
@@ -297,31 +293,29 @@ def InterpretDate(dateStr):
 # Try to make sense of the date information supplied as separate
 # Unknown input arguments should be None
 def InterpretDayMonthYear(dayStr, monthStr, yearStr):
-    import datetime
-    import time
 
     # Let's figure out the date
     year=None
     month=None
     day=None
 
-    if (yearStr != None):
+    if yearStr is not None:
         year = InterpretYear(yearStr)
-        if year == None:
+        if year is None:
             print("   ***Can't interpret year '"+yearStr+"'")
             return None
-    if (monthStr != None):
+    if monthStr is not None:
         month = InterpretMonth(monthStr)
-        if month == None:
+        if month is None:
             print("   ***Can't interpret month '" + monthStr + "'")
-    if (dayStr != None):
+    if dayStr is not None:
         day = int(dayStr)
-        if day == None:
+        if day is None:
             print("   ***Can't interpret day '" + dayStr + "'")
 
-    if day == None:
+    if day is None:
         day=1
-    if month == None:
+    if month is None:
         month=1
     return Date(year, month, day)
 
@@ -352,7 +346,7 @@ def StripHyperlink(text):
     # We'll do this the quick and dirty way and assume that '<' and '>' are not used except in the html
     # If we fail, we just pass the input text back out
     text=text.strip()
-    if text == None or len(text) < 8:   # Bail if it's too short to contain a hyperlink
+    if text is None or len(text) < 8:   # Bail if it's too short to contain a hyperlink
         return text
     if text[0:2].lower() != "<a":       # Bail if it doesn't start with "<A"
         return text

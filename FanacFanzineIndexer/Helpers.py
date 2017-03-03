@@ -322,46 +322,59 @@ def InterpretDayMonthYear(dayStr, monthStr, yearStr):
 
 #-------------------------------------------------------------------
 # Find a hyperlink in a strong, returning either the hyperlink or None
-def Hyperlink(string):
-
-    # A hyperlink will be of the form <A HREF=["hyperlink"]>...<A>
-    lcString=string.lower()
-    loc=lcString.find("<a")
-    if loc < 0:
-        return None
-
-    loc=lcString.find('href="', loc)
-    if loc < 0:
-        return None
-
-    start=loc+len('href="')
-    end=lcString.find('">', start)
-
-    return string[start:end]
+# def Hyperlink(string):
+#
+#     # A hyperlink will be of the form <A HREF=["hyperlink"]>...<A>
+#     lcString=string.lower()
+#     loc=lcString.find("<a")
+#     if loc < 0:
+#         return None
+#
+#     loc=lcString.find('href="', loc)
+#     if loc < 0:
+#         return None
+#
+#     start=loc+len('href="')
+#     end=lcString.find('">', start)
+#
+#     return string[start:end]
 
 #--------------------------------------------------------------------
 # Strip the hyperlink stuff from around its display text
-def StripHyperlink(text):
+def SeparateHyperlink(text):
     # <A ...HREF=...>display text</A>
     # We'll do this the quick and dirty way and assume that '<' and '>' are not used except in the html
-    # If we fail, we just pass the input text back out
     text=text.strip()
     if text is None or len(text) < 8:   # Bail if it's too short to contain a hyperlink
-        return text
+        return None
     if text[0:2].lower() != "<a":       # Bail if it doesn't start with "<A"
-        return text
+        return None
     if text[-4:].lower() != "</a>":     # Bail if it doesn't end with "</A>"
-        return text
+        return None
     loc=text.find(">")      # Find the ">" which ends the opening part of the HTML
     if loc < 0:
-        return text
+        return None
 
-    # OK, it looks like this is a hyperlink.  Strip it away
-    text=text[loc+1:-4]
+    # OK, it looks like this is a hyperlink.  Extract the HREF
+    # The text we want begins with 'href="' and end with '"'
+    hypertext=text[:loc]
+    loc_href=hypertext.lower().find("href=")
+    if loc_href < 0:
+        return None
+    loc_quote1=hypertext.find('"', loc_href+1) # This should find the start of the url
+    if loc_quote1 < 0:
+        return None
+    loc_quote2=hypertext.find('"', loc_quote1+1)
+    if loc_quote2 < 0:
+        return None
 
-    # Now replace '&nbsp;' with spaces
-    return text.replace("&nbsp;", " ")
+    hypertext=hypertext[loc_quote1+1:loc_quote2]
 
+    # Now extract the display text and replace '&nbsp;' with spaces
+    displayText = text[loc + 1:-4]
+    displayText.replace("&nbsp;", " ")
+
+    return (hypertext, displayText)
 
 #----------------------------------------------------------------------
 # Get the index of an entry in a list or return None

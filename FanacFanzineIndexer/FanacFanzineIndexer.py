@@ -128,26 +128,35 @@ for directory in dirList:
     # Create the index table
     # It is a list of rows, with the first row being the header row
     # Each row is a list of columns, so that a table is a 2-dimensional array stored as a list of lists
-    table=[columns]
-    # OK. Now we decode the rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
+    columns.append("Hyperlink")     # Add a Hylerlink column
+    table=[columns]                 # And add the header row to the table
+    # OK. Now we decode the data rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
     loc=endheaders
+    hyper=""    # This will hold any hyperlink encountered in the parsing
     while True:     # Loop over rows
         row=()
-        t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")
+        t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")  # Extract the whole row
         if t is None:
             break
         rowText=t[0]
         endrow=t[1]
-        if t is None:
-            break
+
         loc=0
-        while True: # Loop over columns in row
+        while True:     # Loop over the row, extracting the columns in turn
             t = Helpers.ExtractTaggedStuff(rowText, loc, "td")
             if t is None:
                 break
+            h=Helpers.SeparateHyperlink(t[0])      # See if there's a hyperlink in this cell.  If so, remove the html, leaving the display text in the cell.  Save the hyperlink's URL to go in the new last column
+            if h is not None:
+                t=(h[1], t[1])
+                hyper=h[0]
+                h=None
             row += t[0],
             loc = t[1]
         loc=endrow
+
+        row += hyper,        # Add the hyperlink column.  It may be an empty string.
+
         table.append(row)
 
     # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
@@ -181,7 +190,8 @@ columnSynonyms={
     "Day" : "Day",
     "Date" : "Date",
     "Issue Date" : "Date",
-    "Published": "Date"
+    "Published": "Date",
+    "Hyperlink": "Hyperlink"
 }
 
 # We want to make sure we catch all the useful data, so we also have a list of columns we will ignore.
@@ -198,7 +208,7 @@ ignoreColumns=["Headline", "Pages", "Notes", "Type", "PDF Size", "Description", 
 # The keys will be the fanzine title
 # The value will be a list of namedtuples of (date, issue, hyperlink)
 standardizedFanzines={}
-issueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink"])
+issueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink"])   # Create the factory for the Issue Data named tuple
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
 for title in fanzines:
@@ -270,14 +280,6 @@ for title in fanzines:
             print("   ***NO DATE FOUND. Title= "+title+ "   Table row="+" ".join(tableRow))
             continue
 
-        # Now we need to figure out where the links are...
-        # If there is only one hyperlink/row, that has to be it.  Otherwise...
-        hyperlink=None
-        for cell in tableRow:
-            hyperlink=Helpers.Hyperlink(cell)
-            if hyperlink is not None:   # For now, just use the first hyperlink found
-                break
-
         # Next we find (or construct) the issue title
         # Sometimes there's an issue title, sometimes there isn't. (The data's a real mess!)
         # Worse, sometimes "Issue" is an issue number
@@ -310,10 +312,6 @@ for title in fanzines:
             # For now we'll use Title, but this may need to be improved
             issueTitle=tableRow[indexTitle]
 
-        # The issueTitle is frequently the display text for a hyperlink. If so, extract the display text which is all we want.
-        if issueTitle is not None:
-            issueTitle=Helpers.StripHyperlink(issueTitle)
-
         # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
         # In that case, we can't use it and must try to construct one
         pattern=re.compile("[0-9]")
@@ -337,7 +335,7 @@ for title in fanzines:
         if title == "The MT Void":
             issueTitle="The MT Void "+issueTitle
 
-
+        hyperlink=tableRow[Helpers.GetIndex(columnHeaders, "Hyperlink")]
 
         # OK, we have all the information we want from this TableRow (a single issue of a fanzine).
         # Add it to the standardized fanzine list.

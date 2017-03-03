@@ -311,6 +311,10 @@ for title in fanzines:
             # For now we'll use Title, but this may need to be improved
             issueTitle=tableRow[indexTitle]
 
+        # The issueTitle is frequently the display text for a hyperlink. If so, extract the display text which is all we want.
+        if issueTitle != None:
+            issueTitle=Helpers.StripHyperlink(issueTitle)
+
         # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
         # In that case, we can't use it
         pattern=re.compile("[0-9]")
@@ -325,9 +329,13 @@ for title in fanzines:
             if indexVolNo != None:
                 issueTitle=title+" "+tableRow[indexVolNo]
 
-        # The issueTitle is frequently the display text for a hyperlink. Extract the display text.
-        if issueTitle != None:
-            issueTitle=Helpers.StripHyperlink(issueTitle)
+            # Case: There is a "Number" column
+            if issueTitle == None:
+                indexNum=Helpers.GetIndex(columnHeaders, "Number")
+                if indexNum != None:
+                    issueTitle=title+" "+tableRow[indexNum]
+
+
 
         # OK, we have all the information we want from this TableRow (a single issue of a fanzine).
         # Add it to the standardized fanzine list.

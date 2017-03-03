@@ -3,6 +3,7 @@ from tkinter import filedialog
 import os
 import Helpers
 import collections
+import re
 
 # Get the directory containing the copy of the fanac.org website to be analyzed.
 root = tkinter.Tk()
@@ -309,7 +310,15 @@ for title in fanzines:
         elif indexIssue != None and indexTitle != None:
             # For now we'll use Title, but this may need to be improved
             issueTitle=tableRow[indexTitle]
-        else:
+
+        # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
+        # In that case, we can't use it
+        pattern=re.compile("[0-9]")
+        if issueTitle != None and not re.search(pattern, issueTitle):
+            print("   ***issueTitle does not have numbers: "+issueTitle)
+            issueTitle=None
+
+        if issueTitle == None:
             # There are a bunch of cases to deal with here
             # Case: There is a column "Vol/#"
             indexVolNo=Helpers.GetIndex(columnHeaders, "Vol/#")

@@ -165,6 +165,7 @@ columnSynonyms={
     "Quarter/Month" : "Month",
     "Season" : "Month",
     "Issue" : "Issue",
+    "Fanzine" : "Issue",
     "#" : "Number",
     "Num" : "Number",
     "Number": "Number",
@@ -314,10 +315,9 @@ for title in fanzines:
             issueTitle=Helpers.StripHyperlink(issueTitle)
 
         # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
-        # In that case, we can't use it
+        # In that case, we can't use it and must try to construct one
         pattern=re.compile("[0-9]")
         if issueTitle is not None and not re.search(pattern, issueTitle):
-            print("   ***issueTitle does not have numbers: "+issueTitle)
             issueTitle=None
 
         if issueTitle is None:
@@ -332,6 +332,10 @@ for title in fanzines:
                 indexNum=Helpers.GetIndex(columnHeaders, "Number")
                 if indexNum is not None:
                     issueTitle=title+" "+tableRow[indexNum]
+
+        # MT Void is a special case since there are so many of them, none of which have the fanzine *name* in the title!
+        if title == "The MT Void":
+            issueTitle="The MT Void "+issueTitle
 
 
 

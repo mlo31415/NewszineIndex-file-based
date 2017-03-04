@@ -27,13 +27,19 @@ if len(dirname) == 0:
 # The strategy here is to walk the entire fanzines directory and build up the structure of the entire directory before doing any processing.
 
 # Some directory formats are hard to recognize and/or archaic. They are listed by hand, here.
-singleIssueDirectories=["Abstract", "BNF_of_IZ", "Chanticleer", "Constellation", "emu", "Enchanted_Duplicator",
-                        "Entropy", "Fake", "Fan-Fare", "FanToSee", "kanga", "Leaflet", "LeeHoffman",
-                        "les", "lindsay", "Mallophagan", "Masque", "Monster", "NewFrontiers", "NOSFAn", "Planeteer", "Sense_of_FAPA",
+singleIssueDirectories=["Abstract", "Chanticleer", "Constellation", "Entropy", "Fan-Fare", "FanToSee", "Leaflet", "LeeHoffman",
+                        "Mallophagan", "Masque", "Monster", "NewFrontiers", "NOSFAn", "Planeteer", "Sense_of_FAPA",
                         "SF_Digest", "SF_Digest_2", "SFSFS", "SpaceDiversions", "SpaceFlight", "SpaceMagazine",
                         "Starlight", "SunSpots", "Tomorrow", "Vanations", "Vertigo", "WildHair", "Willis_Papers", "X", "Yandro"]
 
-nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "BestOfSusanWood", "Beyond the Enchanted Duplicator to the Enchanted Convention",
+# These simply lack the needed data
+hopelessDirectories=["BNF_of_IZ", "Enchanted_Duplicator"]
+
+# These have index pages which are missing the top title block
+missingTopTitleBlock=["BestOfSusanWood"]
+
+# And these are directories under fanzines that are weird in some way.  In most cases, they;re not fanzines but convention publications
+nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "Beyond the Enchanted Duplicator to the Enchanted Convention",
                         "Bids_etc", "Boskone", "Bullsheet", "Chicon", "Cinvention", "Clevention",
                         "ConStellation", "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
                         "Gotterdammerung", "Helios", "IGOTS", "IguanaCon", "Interaction", "LASFS", "Loncon", "Lunacon",
@@ -55,6 +61,9 @@ for directory in dirList:
     if directory in singleIssueDirectories:
         print(directory + "  (single-issue -- skipped)")
         continue
+    if directory in hopelessDirectories:
+        print(directory + "  (hopeless -- skipped)")
+        continue
     if directory in nonStandardDirectories:
         print(directory + "  (non-standard -- skipped)")
         continue
@@ -70,7 +79,7 @@ for directory in dirList:
     # <title></title> tagging the fanzine's display name
     # Some page info in <h2></h2>
     #   (Sometimes some untagged bumpf following this.)
-    # A top table which holds the top navigation buttons and can be ignored.
+    # A top table which holds the top navigation buttons and can be ignored. (This is missing in a few directories.)
     # A middle table which holds the rows of issue links.
     # A bottom table holds the bottom navigation buttons and can be ignored, also.
     # Some more untagged bumpf included who scanned it and the update date.
@@ -88,11 +97,13 @@ for directory in dirList:
     loc=t[1]
 
     # Try to find the first two tables
-    t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
-    if t is None:
-        print("******Could not find first <table>.  Aborting.")
-        continue
-    loc=t[1]
+    if directory not in missingTopTitleBlock:
+        t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
+        if t is None:
+            print("******Could not find first <table>.  Aborting.")
+            continue
+        loc=t[1]
+
     t=Helpers.ExtractTaggedStuff(contents, loc, "table")
     if t is None:
         print("******Could not find second <table>.  Aborting.")
@@ -208,11 +219,12 @@ ignoreColumns=["Headline", "Pages", "Notes", "Type", "PDF Size", "Description", 
 # The keys will be the fanzine title
 # The value will be a list of namedtuples of (date, issue, hyperlink)
 standardizedFanzines={}
-issueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink"])   # Create the factory for the Issue Data named tuple
+IssueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink", "directory"])   # Create the factory for the Issue Data named tuple
 
 # Walk the fanzines dictionary and extract the data to create the standardized version
 for title in fanzines:
     table=fanzines[title][1]    # We want just the index table
+    directory=fanzines[title][0]
     firstTime=True
     columnHeaders=[]
     for tableRow in table:
@@ -313,36 +325,37 @@ for title in fanzines:
             issueTitle=tableRow[indexTitle]
 
         # Because the site is so inconsistent, sometimes the issue name doesn't have an issue or volume number
-        # In that case, we can't use it and must try to construct one
+        # In that case, we can't use it and must try to construct one.
         pattern=re.compile("[0-9]")
+        betterOneFound = None
         if issueTitle is not None and not re.search(pattern, issueTitle):
-            issueTitle=None
-
-        if issueTitle is None:
-            # There are a bunch of cases to deal with here
             # Case: There is a column "Vol/#"
-            indexVolNo=Helpers.GetIndex(columnHeaders, "Vol/#")
-            if indexVolNo is not None:
-                issueTitle=title+" "+tableRow[indexVolNo]
+            if betterOneFound is None:
+                indexVolNo=Helpers.GetIndex(columnHeaders, "Vol/#")
+                if indexVolNo is not None:
+                    betterOneFound=title+" "+tableRow[indexVolNo]
 
             # Case: There is a "Number" column
-            if issueTitle is None:
+            if betterOneFound is None:
                 indexNum=Helpers.GetIndex(columnHeaders, "Number")
                 if indexNum is not None:
-                    issueTitle=title+" "+tableRow[indexNum]
+                    betterOneFound=title+" "+tableRow[indexNum]
+
+        if betterOneFound is not None:
+            issueTitle=betterOneFound
 
         # MT Void is a special case since there are so many of them, none of which have the fanzine *name* in the title!
         if title == "The MT Void":
-            issueTitle="The MT Void "+issueTitle
+            issueTitle="The MT Void "+issueTitle.replace("&nbsp;", "")
 
         hyperlink=tableRow[Helpers.GetIndex(columnHeaders, "Hyperlink")]
 
         # OK, we have all the information we want from this TableRow (a single issue of a fanzine).
         # Add it to the standardized fanzine list.
         if title in standardizedFanzines:
-            standardizedFanzines[title].append(issueData(date, issueTitle, hyperlink))
+            standardizedFanzines[title].append(IssueData(date, issueTitle, hyperlink, directory))
         else:
-            standardizedFanzines[title] = [issueData(date, issueTitle, hyperlink)]
+            standardizedFanzines[title] = [IssueData(date, issueTitle, hyperlink, directory)]
 
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
@@ -377,9 +390,9 @@ for directory in singleIssueDirectories:
                 date=Helpers.InterpretDate(h2s[i])
                 if date is not None:
                     if title in standardizedFanzines:
-                        standardizedFanzines[title].append(issueData(date, title, "index.html"))
+                        standardizedFanzines[title].append(IssueData(date, title, "index.html", directory))
                     else:
-                        standardizedFanzines[title] = [issueData(date, title, "index.html")]
+                        standardizedFanzines[title] = [IssueData(date, title, "index.html", directory)]
                     success=True
                     break
 
@@ -395,13 +408,13 @@ sortableListOfIssues=[]
 for title in standardizedFanzines:
     issueList=standardizedFanzines[title]
     for issue in issueList:
-        sortableListOfIssues.append((title, issue.date, issue.title, issue.hyperlink))
+        sortableListOfIssues.append((title, issue.date, issue.title, issue.hyperlink, issue.directory))
 
 sortableListOfIssues=sorted(sortableListOfIssues, key=lambda tp: tp[1])
 
 # Now print the list
 out=open("output data.txt", "w")
 for item in sortableListOfIssues:
-    print(str(item[1])+"  \t"+str(item[0])+"  \t"+str(item[2])+"  \t"+str(item[3]), file=out)
+    print(str(item[1])+"  \t"+str(item[0])+"  \t"+str(item[2])+"  \t"+str(item[4])+"/"+str(item[3]), file=out)
 out.close()
 i=0

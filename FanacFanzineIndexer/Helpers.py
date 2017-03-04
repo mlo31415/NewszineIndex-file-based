@@ -320,25 +320,6 @@ def InterpretDayMonthYear(dayStr, monthStr, yearStr):
     return Date(year, month, day)
 
 
-#-------------------------------------------------------------------
-# Find a hyperlink in a strong, returning either the hyperlink or None
-# def Hyperlink(string):
-#
-#     # A hyperlink will be of the form <A HREF=["hyperlink"]>...<A>
-#     lcString=string.lower()
-#     loc=lcString.find("<a")
-#     if loc < 0:
-#         return None
-#
-#     loc=lcString.find('href="', loc)
-#     if loc < 0:
-#         return None
-#
-#     start=loc+len('href="')
-#     end=lcString.find('">', start)
-#
-#     return string[start:end]
-
 #--------------------------------------------------------------------
 # Strip the hyperlink stuff from around its display text
 def SeparateHyperlink(text):

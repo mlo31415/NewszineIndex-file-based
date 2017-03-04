@@ -63,7 +63,7 @@ for directory in dirList:
     # There should be an index.html file.  Open it.
     indexfilename=os.path.join(dirname, directory, "index.html")
     if not os.path.isfile(indexfilename):
-        print("  ***Missing: "+indexfilename)
+        print("******Missing: "+indexfilename+"   ...Aborting.")
         continue
 
     # The most common directory index.html format
@@ -82,7 +82,7 @@ for directory in dirList:
     # Get the <title>
     t=Helpers.ExtractTaggedStuff(contents, 0, "title")
     if t is None:
-        print("  ***Could not find <title>...</title>.  Aborting.")
+        print("******Could not find <title>...</title>.  Aborting.")
         continue
     title=t[0]
     loc=t[1]
@@ -90,12 +90,12 @@ for directory in dirList:
     # Try to find the first two tables
     t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
     if t is None:
-        print("  ***Could not find first <table>.  Aborting.")
+        print("******Could not find first <table>.  Aborting.")
         continue
     loc=t[1]
     t=Helpers.ExtractTaggedStuff(contents, loc, "table")
     if t is None:
-        print("  ***Could not find second <table>.  Aborting.")
+        print("******Could not find second <table>.  Aborting.")
         continue
     tableText=t[0]
 
@@ -111,7 +111,7 @@ for directory in dirList:
     columns=[]
     t=Helpers.ExtractTaggedStuff(tableText, 0, "tr")
     if t is None:
-        print("  ***Could not find column headers row.  Aborting.")
+        print("******Could not find column headers row.  Aborting.")
         continue
     headers=t[0]
     endheaders=t[1]
@@ -225,7 +225,7 @@ for title in fanzines:
                     if header in columnSynonyms:
                         columnHeaders.append(columnSynonyms[header])
                     else:
-                        print("   ***"+title+": Column header not recognized:  "+header)
+                        print("******"+title+": Column header not recognized:  "+header)
                         columnHeaders.append("not recognized")
             firstTime=False
             continue
@@ -239,7 +239,7 @@ for title in fanzines:
             dateField=tableRow[columnHeaders.index("Date")]
             date=Helpers.InterpretDate(dateField)
             if date is None:
-                print("   ***"+title+": date interpretation failed, date=" + dateField)
+                print("******"+title+": date interpretation failed, date=" + dateField)
         except ValueError:
             date=None
 
@@ -273,11 +273,11 @@ for title in fanzines:
                 try:
                     date=Helpers.Date(year, month, day)
                 except:
-                    print("   ***BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
+                    print("******BAD DATE. Title= " + title + "   year=" + str(year)+"  month="+str(month)+"   day="+str(day))
                     date=None
 
         if date is None:
-            print("   ***NO DATE FOUND. Title= "+title+ "   Table row="+" ".join(tableRow))
+            print("******NO DATE FOUND. Title= "+title+ "   Table row="+" ".join(tableRow))
             continue
 
         # Next we find (or construct) the issue title
@@ -347,7 +347,43 @@ for title in fanzines:
 
 # Next we walk the list of singe-issue directories and try to extract the needed information
 for directory in singleIssueDirectories:
-    i=0 # This is a placeholder stub
+    print(directory + " ...processing")
+
+    # There should be an index.html file.  Open it.
+    indexfilename=os.path.join(dirname, directory, "index.html")
+    if not os.path.isfile(indexfilename):
+        print("******Missing: "+indexfilename)
+        continue
+
+    # Read the index.html file.
+    with open(indexfilename, "r") as file:
+        contents=file.read()
+
+    success=False
+
+    # Case 1:   The issue information is an an <h2> block, which consists of several bits of information separated by one or more <BR>s.
+    #           The title is typically first, and there may be a date in there somewhere.
+    # The index.html page itself is the URL we need to use
+    t=Helpers.ExtractTaggedStuff(contents, 0, "body")
+    if t is not None:
+        contents=t[0]
+        t=Helpers.ExtractTaggedStuff(contents, 0, "h2")
+        if t is not None:
+            h2=t[0]
+            h2s=h2.split("<BR>")
+            title=h2s[0]
+            # Walk through the chunks of H2 looking for something that parses like a date
+            for i in range(1, len(h2s)-1):
+                date=Helpers.InterpretDate(h2s[i])
+                if date is not None:
+                    if title in standardizedFanzines:
+                        standardizedFanzines[title].append(issueData(date, title, "index.html"))
+                    else:
+                        standardizedFanzines[title] = [issueData(date, title, "index.html")]
+                    success=True
+                    break
+
+
 
 #=================================
 # Step 3

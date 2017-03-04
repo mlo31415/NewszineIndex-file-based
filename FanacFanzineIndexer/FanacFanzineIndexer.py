@@ -373,7 +373,7 @@ for directory in singleIssueDirectories:
             h2s=h2.split("<BR>")
             title=h2s[0]
             # Walk through the chunks of H2 looking for something that parses like a date
-            for i in range(1, len(h2s)-1):
+            for i in range(1, len(h2s)):
                 date=Helpers.InterpretDate(h2s[i])
                 if date is not None:
                     if title in standardizedFanzines:

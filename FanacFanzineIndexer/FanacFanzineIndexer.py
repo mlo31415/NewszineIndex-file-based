@@ -27,7 +27,8 @@ if len(dirname) == 0:
 # The strategy here is to walk the entire fanzines directory and build up the structure of the entire directory before doing any processing.
 
 # Some directory formats are hard to recognize and/or archaic. They are listed by hand, here.
-singleIssueDirectories=["Abstract", "Chanticleer", "Constellation", "Entropy", "Fan-Fare", "FanToSee", "Leaflet", "LeeHoffman",
+singleIssueDirectories=["Abstract", "Beyond_Enchanted",
+                        "Chanticleer", "Constellation", "Entropy", "Fan-Fare", "FanToSee", "Leaflet", "LeeHoffman",
                         "Mallophagan", "Masque", "Monster", "NewFrontiers", "NOSFAn", "Planeteer", "Sense_of_FAPA",
                         "SF_Digest", "SF_Digest_2", "SFSFS", "SpaceDiversions", "SpaceFlight", "SpaceMagazine",
                         "Starlight", "SunSpots", "Tomorrow", "Vanations", "Vertigo", "WildHair", "Willis_Papers", "X", "Yandro"]
@@ -38,14 +39,19 @@ hopelessDirectories=["BNF_of_IZ", "Enchanted_Duplicator"]
 # These have index pages which are missing the top title block
 missingTopTitleBlock=["BestOfSusanWood"]
 
+# These are directories which do not belong here at all
+interlopers=["AngeliqueTrouvere", "AvramDavidson"]
+
+# Horrible special cases: Too weird to deal with generally; too important to ignore
+horribleSpecialCases=["Bullsheet"]
+
 # And these are directories under fanzines that are weird in some way.  In most cases, they;re not fanzines but convention publications
-nonStandardDirectories={"AngeliqueTrouvere", "AvramDavidson", "Beyond the Enchanted Duplicator to the Enchanted Convention",
-                        "Bids_etc", "Boskone", "Bullsheet", "Chicon", "Cinvention", "Clevention",
+nonStandardDirectories=["Bids_etc", "Boskone", "Chicon", "Cinvention", "Clevention",
                         "ConStellation", "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
                         "Gotterdammerung", "Helios", "IGOTS", "IguanaCon", "Interaction", "LASFS", "Loncon", "Lunacon",
                         "MagiCon", "Mimosa", "Minicon", "Miscellaneous", "Monster", "NebulaAwardsBanquet", "NEOSFS",
                         "Nolacon", "NOLAzine", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Pacificon", "Philcon", "Pittcon",
-                        "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"}
+                        "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"]
 
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
@@ -63,6 +69,12 @@ for directory in dirList:
         continue
     if directory in hopelessDirectories:
         print(directory + "  (hopeless -- skipped)")
+        continue
+    if directory in interlopers:
+        print(directory + "  (interloper -- skipped)")
+        continue
+    if directory in horribleSpecialCases:
+        print(directory + "  (horrible special case -- skipped)")
         continue
     if directory in nonStandardDirectories:
         print(directory + "  (non-standard -- skipped)")
@@ -217,7 +229,7 @@ ignoreColumns=["Headline", "Pages", "Notes", "Type", "PDF Size", "Description", 
 
 # The data will be stored in a new dictionary with the same structure as "fanzines"
 # The keys will be the fanzine title
-# The value will be a list of namedtuples of (date, issue, hyperlink)
+# The value will be a list of named tuples of (date, issue, hyperlink)
 standardizedFanzines={}
 IssueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink", "directory"])   # Create the factory for the Issue Data named tuple
 
@@ -225,25 +237,21 @@ IssueData=collections.namedtuple("IssueData", ["date", "title", "hyperlink", "di
 for title in fanzines:
     table=fanzines[title][1]    # We want just the index table
     directory=fanzines[title][0]
-    firstTime=True
     columnHeaders=[]
-    for tableRow in table:
-        if firstTime:
-            # The first item in the table is the column headers, but we need to convert these to their standard forms
-            for header in tableRow:
-                if header in ignoreColumns:
-                    columnHeaders.append("ignored")
-                else:
-                    if header in columnSynonyms:
-                        columnHeaders.append(columnSynonyms[header])
-                    else:
-                        print("******"+title+": Column header not recognized:  "+header)
-                        columnHeaders.append("not recognized")
-            firstTime=False
-            continue
 
-        # The rest of the rows are data rows.
+    # The first item in the table is the column headers, but we need to convert these to their standard forms
+    for header in table[0]:
+        if header in ignoreColumns:
+            columnHeaders.append("ignored")
+        else:
+            if header in columnSynonyms:
+                columnHeaders.append(columnSynonyms[header])
+            else:
+                print("******" + title + ": Column header not recognized:  " + header)
+                columnHeaders.append("not recognized")
 
+    # The rest of the rows are data rows
+    for tableRow in table[1:]:
         # The next step is to try to make sense of the date information and to generate a date for each issue.
         # First see if there's a date field
         date=None
@@ -395,7 +403,6 @@ for directory in singleIssueDirectories:
                         standardizedFanzines[title] = [IssueData(date, title, "index.html", directory)]
                     success=True
                     break
-
 
 
 #=================================

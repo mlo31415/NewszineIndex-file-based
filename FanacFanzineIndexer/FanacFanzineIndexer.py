@@ -43,15 +43,15 @@ missingTopTitleBlock=["BestOfSusanWood"]
 interlopers=["AngeliqueTrouvere", "AvramDavidson"]
 
 # Horrible special cases: Too weird to deal with generally; too important to ignore
-horribleSpecialCases=["Bullsheet"]
+horribleSpecialCases={"Bullsheet": ["Bullsheet1-00.html", "Bullsheet2-00.html"]}
 
 # And these are directories under fanzines that are weird in some way.  In most cases, they;re not fanzines but convention publications
-nonStandardDirectories=["Bids_etc", "Boskone", "Chicon", "Cinvention", "Clevention",
-                        "ConStellation", "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
+nonStandardDirectories=["Bids_etc", "Boskone", "Chicon", "Cinvention", "Clevention", "ConStellation",
+                        "Cosmag", "Denvention", "Don_Ford_Notebook", "Eastercon", "Gegenschein",
                         "Gotterdammerung", "Helios", "IGOTS", "IguanaCon", "Interaction", "LASFS", "Loncon", "Lunacon",
                         "MagiCon", "Mimosa", "Minicon", "Miscellaneous", "Monster", "NebulaAwardsBanquet", "NEOSFS",
-                        "Nolacon", "NOLAzine", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Pacificon", "Philcon", "Pittcon",
-                        "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Wrevenge", "Yokohama"]
+                        "Nolacon", "NorWesCon", "Novae_Terrae", "NYcon", "OKon", "Pacificon", "Philcon", "Pittcon",
+                        "Plokta", "Seacon", "SFCon", "sfnews", "Solacon", "Syllabus", "Tropicon", "Yokohama"]
 
 # Get a list of all the directories in the directory.
 dirList = [f for f in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, f))]
@@ -73,117 +73,126 @@ for directory in dirList:
     if directory in interlopers:
         print(directory + "  (interloper -- skipped)")
         continue
-    if directory in horribleSpecialCases:
-        print(directory + "  (horrible special case -- skipped)")
-        continue
     if directory in nonStandardDirectories:
         print(directory + "  (non-standard -- skipped)")
         continue
     print(directory + " ...processing")
 
-    # There should be an index.html file.  Open it.
-    indexfilename=os.path.join(dirname, directory, "index.html")
-    if not os.path.isfile(indexfilename):
-        print("******Missing: "+indexfilename+"   ...Aborting.")
-        continue
+    listOfIndexFiles=[]
+    if directory in horribleSpecialCases:
+        listOfIndexFiles=horribleSpecialCases[directory]
+    else:
+        listOfIndexFiles=["index.html"]
 
-    # The most common directory index.html format
-    # <title></title> tagging the fanzine's display name
-    # Some page info in <h2></h2>
-    #   (Sometimes some untagged bumpf following this.)
-    # A top table which holds the top navigation buttons and can be ignored. (This is missing in a few directories.)
-    # A middle table which holds the rows of issue links.
-    # A bottom table holds the bottom navigation buttons and can be ignored, also.
-    # Some more untagged bumpf included who scanned it and the update date.
-
-    # Read the index.html file.
-    with open(indexfilename, "r") as file:
-        contents=file.read()
-
-    # Get the <title>
-    t=Helpers.ExtractTaggedStuff(contents, 0, "title")
-    if t is None:
-        print("******Could not find <title>...</title>.  Aborting.")
-        continue
-    title=t[0]
-    loc=t[1]
-
-    # Try to find the first two tables
-    if directory not in missingTopTitleBlock:
-        t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
-        if t is None:
-            print("******Could not find first <table>.  Aborting.")
+    for indexFileName in listOfIndexFiles:
+        # There should be an index.html file.  Open it.
+        indexFileName=os.path.join(dirname, directory, indexFileName)
+        if not os.path.isfile(indexFileName):
+            print("******Missing: " + indexFileName + "   ...Aborting.")
             continue
+
+        # The most common directory index.html format
+        # <title></title> tagging the fanzine's display name
+        # Some page info in <h2></h2>
+        #   (Sometimes some untagged bumpf following this.)
+        # A top table which holds the top navigation buttons and can be ignored. (This is missing in a few directories.)
+        # A middle table which holds the rows of issue links.
+        # A bottom table holds the bottom navigation buttons and can be ignored, also.
+        # Some more untagged bumpf included who scanned it and the update date.
+
+        # Read the index.html file.
+        with open(indexFileName, "r") as file:
+            contents=file.read()
+
+        # Get the <title>
+        t=Helpers.ExtractTaggedStuff(contents, 0, "title")
+        if t is None:
+            print("******Could not find <title>...</title>.  Aborting.")
+            continue
+        title=t[0]
         loc=t[1]
 
-    t=Helpers.ExtractTaggedStuff(contents, loc, "table")
-    if t is None:
-        print("******Could not find second <table>.  Aborting.")
-        continue
-    tableText=t[0]
+        # Try to find the first two tables
+        if directory not in missingTopTitleBlock:
+            t=Helpers.ExtractTaggedStuff(contents, loc, "table")    # Ignored first table
+            if t is None:
+                print("******Could not find first <table>.  Aborting.")
+                continue
+            loc=t[1]
 
-    # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
-    tableText=tableText.replace("<p>", "").replace("<P>", "").replace("</p>", "").replace("</P>", "")
-    # Eliminate /n
-    tableText=tableText.replace("\n", "")
-
-    # OK, start decoding the index table.
-
-    # The first row (bounded by <tr> tags) should be column headers bounded by <th> tags.
-    # We will loop until we run out of <th> tags
-    columns=[]
-    t=Helpers.ExtractTaggedStuff(tableText, 0, "tr")
-    if t is None:
-        print("******Could not find column headers row.  Aborting.")
-        continue
-    headers=t[0]
-    endheaders=t[1]
-    loc=0
-    while True:
-        t=Helpers.ExtractTaggedStuff(headers, loc, "th")
+        t=Helpers.ExtractTaggedStuff(contents, loc, "table")
         if t is None:
-            break
-        columns.append(t[0])
-        loc=t[1]
+            print("******Could not find second <table>.  Aborting.")
+            continue
+        tableText=t[0]
 
-    print("   "+str(columns))
+        # Eliminate <p> and </p>.  The former because they are usually not closed by a </p> and the latter because sometimes they are.
+        tableText=tableText.replace("<p>", "").replace("<P>", "").replace("</p>", "").replace("</P>", "")
+        # Eliminate /n
+        tableText=tableText.replace("\n", "")
 
-    # Create the index table
-    # It is a list of rows, with the first row being the header row
-    # Each row is a list of columns, so that a table is a 2-dimensional array stored as a list of lists
-    columns.append("Hyperlink")     # Add a Hylerlink column
-    table=[columns]                 # And add the header row to the table
-    # OK. Now we decode the data rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
-    loc=endheaders
-    hyper=""    # This will hold any hyperlink encountered in the parsing
-    while True:     # Loop over rows
-        row=()
-        t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")  # Extract the whole row
+        # OK, start decoding the index table.
+
+        # The first row (bounded by <tr> tags) should be column headers bounded by <th> tags.
+        # We will loop until we run out of <th> tags
+        columns=[]
+        t=Helpers.ExtractTaggedStuff(tableText, 0, "tr")
         if t is None:
-            break
-        rowText=t[0]
-        endrow=t[1]
-
+            print("******Could not find column headers row.  Aborting.")
+            continue
+        headers=t[0]
+        endheaders=t[1]
         loc=0
-        while True:     # Loop over the row, extracting the columns in turn
-            t = Helpers.ExtractTaggedStuff(rowText, loc, "td")
+        while True:
+            t=Helpers.ExtractTaggedStuff(headers, loc, "th")
             if t is None:
                 break
-            h=Helpers.SeparateHyperlink(t[0])      # See if there's a hyperlink in this cell.  If so, remove the html, leaving the display text in the cell.  Save the hyperlink's URL to go in the new last column
-            if h is not None:
-                t=(h[1], t[1])
-                hyper=h[0]
-                h=None
-            row += t[0],
-            loc = t[1]
-        loc=endrow
+            columns.append(t[0])
+            loc=t[1]
 
-        row += hyper,        # Add the hyperlink column.  It may be an empty string.
+        print("   "+str(columns))
 
-        table.append(row)
+        # Create the index table
+        # It is a list of rows, with the first row being the header row
+        # Each row is a list of columns, so that a table is a 2-dimensional array stored as a list of lists
+        columns.append("Hyperlink")     # Add a Hylerlink column
+        table=[columns]                 # And add the header row to the table
+        # OK. Now we decode the data rows.  There should be one cell for each header column in each row.  The rows will be saved as a list of tuples.
+        loc=endheaders
+        hyper=""    # This will hold any hyperlink encountered in the parsing
+        while True:     # Loop over rows
+            row=()
+            t=Helpers.ExtractTaggedStuff(tableText, loc, "tr")  # Extract the whole row
+            if t is None:
+                break
+            rowText=t[0]
+            endrow=t[1]
 
-    # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
-    fanzines[title]=(directory, table)
+            loc=0
+            while True:     # Loop over the row, extracting the columns in turn
+                t = Helpers.ExtractTaggedStuff(rowText, loc, "td")
+                if t is None:
+                    break
+                h=Helpers.SeparateHyperlink(t[0])      # See if there's a hyperlink in this cell.  If so, remove the html, leaving the display text in the cell.  Save the hyperlink's URL to go in the new last column
+                if h is not None:
+                    t=(h[1], t[1])
+                    hyper=h[0]
+                    h=None
+                row += t[0],
+                loc = t[1]
+            loc=endrow
+
+            row += hyper,        # Add the hyperlink column.  It may be an empty string.
+
+            table.append(row)
+
+        # Create the tuple consisting of the directory name and the index table and store it as a dictionary entry under the fanzine's name
+        # We have a potential problem since we have at least once case (Bullsheet) where we have two fanzines in the same directory with the same title.
+        # We'll add a trailing underscore to the 2nd title. (Not really a great solution, but let's see how big a problem this is before doing something more general.)
+        if title in fanzines:
+            title+="_"
+        fanzines[title]=(directory, table)
+
 
 #=================================
 # Step 2
@@ -277,8 +286,7 @@ for title in fanzines:
             except:
                 month=None
 
-            if month is None:
-                month=1     # If there's no readable month, assume we have a year only and date it January
+            month = month or 1  # If there's no readable month, assume we have a year only and date it January
 
             try:
                 dayField=tableRow[columnHeaders.index("Day")]
@@ -286,8 +294,7 @@ for title in fanzines:
             except:
                 day=None
 
-            if day is None:
-                day=1       # If there's no readable day, assume we have a year and month only and date it the 1st
+            day = day or 1      # If there's no readable day, assume we have a year and month only and date it the 1st
 
             if year is not None:    # We must have a year.
                 try:
@@ -371,13 +378,13 @@ for directory in singleIssueDirectories:
     print(directory + " ...processing")
 
     # There should be an index.html file.  Open it.
-    indexfilename=os.path.join(dirname, directory, "index.html")
-    if not os.path.isfile(indexfilename):
-        print("******Missing: "+indexfilename)
+    indexFileName=os.path.join(dirname, directory, "index.html")
+    if not os.path.isfile(indexFileName):
+        print("******Missing: " + indexFileName)
         continue
 
     # Read the index.html file.
-    with open(indexfilename, "r") as file:
+    with open(indexFileName, "r") as file:
         contents=file.read()
 
     success=False

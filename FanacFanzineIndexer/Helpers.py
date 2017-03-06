@@ -313,10 +313,9 @@ def InterpretDayMonthYear(dayStr, monthStr, yearStr):
         if day is None:
             print("   ***Can't interpret day '" + dayStr + "'")
 
-    if day is None:
-        day=1
-    if month is None:
-        month=1
+    day = day or 1
+    month = month or 1
+
     return Date(year, month, day)
 
 

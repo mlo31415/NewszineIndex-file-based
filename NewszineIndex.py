@@ -8,11 +8,11 @@ import re
 # This is a revision of the LST-file-based NewszineIndex program based on working from a local copy of fanac.org
 
 # Get the directory containing fanac.org
-root = tkinter.Tk()
-root.withdraw()
-lstDirname = filedialog.askdirectory()
-if len(lstDirname) == 0:
-    exit()
+# root = tkinter.Tk()
+# root.withdraw()
+# lstDirname = filedialog.askdirectory()
+# if len(lstDirname) == 0:
+#     exit()
 
 # Step 1: Read the newszine data from fanac.org
 # For each newszine series:
@@ -28,7 +28,35 @@ if len(lstDirname) == 0:
 #               URL of first page
 
 # Since there's no way to tell a newszine from anything else of fanac.org, we start with a list of newszine series
+# Each kind of directory will have a different list
 
+# Lists of newszines with an index.html pointing to a standard table of issues
+# (This is the "normal" case)
+indexHtmlDirectoryList=["Bullsheet", "Fanew_Sletter","FanewsCard", "File770"]
+
+# Out of sheer laziness, I will hardwire the location of the site files.
+# Eventually, this should be handled a bit more elegantly.
+sitePath="I:/fanac.com backup/_/public/fanzines"
+
+# We shouldn't have to look at more than just the index.html file
+for name in indexHtmlDirectoryList:
+    print("fanzine='"+name+"'")
+
+    # Open the index.html file
+    dirpath=os.path.normpath(os.path.join(sitePath, name))
+    if not os.path.isdir(dirpath):
+        print("    ***Not a directory: '"+dirpath+"'")
+        continue
+    indexpath=os.path.normpath(os.path.join(dirpath, "index.html"))
+    if not os.path.isfile(indexpath):
+        print("    ***No index file: '" + indexpath + "'")
+        continue
+    f=open(indexpath)
+
+    # Read the index file and find the table
+    # We scan the index file for the line "<P><TABLE BORDER="1" CELLPADDING="5">" which begins the table
+
+    # Interpret the table lines
 
 # Get a list of all the filenames of the .lst files in that directory.
 os.chdir(lstDirname)

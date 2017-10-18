@@ -95,11 +95,12 @@ def RecognizeDescriptionBlockEnd(line):
     return False
 
 # Find text bracketed by <b>...</b>
+# Return the contents of the first pair of brackets found and the remainder of the input string
 def FindBracketedText(str, b):
     l1=str.find("<"+b+">")
     if l1 == -1:
-        return ""
+        return "", ""
     l2=str.find("</"+b+">", l1+1)
     if l2 == -1:
-        return ""
-    return str[l1+len(b)+2:l2]
+        return "", ""
+    return str[l1+len(b)+2:l2], str[l2+3+len(b):]

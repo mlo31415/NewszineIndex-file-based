@@ -104,3 +104,12 @@ def FindBracketedText(str, b):
     if l2 == -1:
         return "", ""
     return str[l1+len(b)+2:l2], str[l2+3+len(b):]
+
+# Find an element in a list of strings using case-insensitive compares and return its index or -1 if not present
+def FindStringInList(list, str):
+    i=0
+    for s in list:
+        if s.lower() == str.lower():
+            return i
+        i=i+1
+    return -1

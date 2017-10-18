@@ -6,6 +6,14 @@ def InterpretYear(yearstring):
         year=None
     return year
 
+def InterpretDay(daystring):
+    try:
+        day=int(daystring)
+    except:
+        print("   ***Year conversion failed: '" + daystring+"'")
+        day=None
+    return day
+
 def InterpretMonth(monthstring):
     monthConversionTable={"jan" : 1, "january" : 1, "1" : 1,
                           "feb" : 2, "february" : 2, "2" : 2,
@@ -97,13 +105,18 @@ def RecognizeDescriptionBlockEnd(line):
 # Find text bracketed by <b>...</b>
 # Return the contents of the first pair of brackets found and the remainder of the input string
 def FindBracketedText(str, b):
-    l1=str.find("<"+b+">")
+    strlower=str.lower()
+    l1=strlower.find("<"+b.lower())
     if l1 == -1:
         return "", ""
-    l2=str.find("</"+b+">", l1+1)
+    l1=strlower.find(">", l1)
+    if l1 == -1:
+        print("***Error: no terminating '>' found in "+strlower+"'")
+        return "", ""
+    l2=strlower.find("</"+b.lower()+">", l1+1)
     if l2 == -1:
         return "", ""
-    return str[l1+len(b)+2:l2], str[l2+3+len(b):]
+    return str[l1+1:l2], str[l2+3+len(b):]
 
 # Find an element in a list of strings using case-insensitive compares and return its index or -1 if not present
 def FindStringInList(list, str):

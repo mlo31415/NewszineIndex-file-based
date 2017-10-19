@@ -61,11 +61,16 @@ for name in indexHtmlDirectoryList:
 
     # And find the table
     # We scan the index file for the line "<P><TABLE BORDER="1" CELLPADDING="5">" which begins the table
-    locStartTable=contents.find('<P><TABLE BORDER="1" CELLPADDING="5">')
+    locStartTable=contents.lower().find('<p><table border="1" cellpadding="5">')
     if locStartTable == -1:
         print("    ***No table header found")
-
     contents=contents[locStartTable:]
+
+    # And for </table> which ends the table
+    locEndTable=contents.lower().find("</table>")
+    if locEndTable == -1:
+        print("    ***Table header not terminated")
+    contents=contents[:locEndTable]
 
     # Interpret the table lines
 
@@ -82,6 +87,7 @@ for name in indexHtmlDirectoryList:
             break
         colHeaders.append(Helpers.CannonicizeColumnHeaders(colHeaderText))
         colHeaderRowText = remainder
+    print("   Column headers="+str(colHeaders))
 
     # Now, one by one we read the rows for the individual issues.
     # We want enough information to derive the following:
@@ -110,6 +116,42 @@ for name in indexHtmlDirectoryList:
                 break
             colContents.append(cellText)
             rowText = remainder
+
+        # Look for the title and URL, first
+        # The format of the column contents is:
+        #  <A stuff HREF="filename.html">displayname</A>
+        #       where
+        #       stuff is optional misc HTML code (e.g., CLASS-"new")
+        #       "filename.html" is the name of the html file
+        #       "displayname" is the name as given in the title column of the tabel
+        title="title not found"
+        loc=Helpers.FindStringInList(colHeaders, "title")
+        if loc != -1:
+            title=colContents[loc]
+        # Now we decode the title to pull out the URL and displayname
+        # Start by ignoring everything before the HREF=
+        loc=title.lower().find("href=")
+        if loc == -1:
+            print("  ***Can't decode (1) title="+title)
+            continue
+        title=title[loc+5:]
+        # What's left should begin with a '"' and end with </A>.  Delete them both
+        if title[0] == '"':
+            title=title[1:]
+        if title.lower()[-4:] == "</a>":
+            title=title[:-4]
+        # Now we should have filename.html followed by '">' followed by displayname
+        loc=title.find('">')
+        if loc == -1:
+            print("  ***Can't decode (2) title="+title)
+            continue
+        s=title.split('">')
+        if len(s) != 2:
+            print("  ***Can't decode (3) title="+title)
+            continue
+
+        filename=s[0]
+        displayname=s[1]
 
         # Now see if we can figure out the date.
         year=None   # We'll detect that a date has been found by year becoming non-Null
@@ -157,11 +199,17 @@ for name in indexHtmlDirectoryList:
         if year == None:
             print("   **** Parse failure on date")
 
-# Get a list of all the filenames of the .lst files in that directory.
-os.chdir(lstDirname)
-lstList = os.listdir(".")
-lstList = [f for f in lstList if os.path.splitext(f)[1].lower() == ".lst"]
+        print("   "+title+" ==> "+ filename+", "+displayname+"   year="+str(year)+"   month="+str(month)+"   day="+str(day))
 
+
+    # Start building a fanzine list, containing date, URL and name for each fanzine found
+    fanzineList = []
+
+
+
+#**************************************************************************************************************
+# Old code
+#**************************************************************************************************************
 # We walk the list of .lst files, analyzing each one.
 # The structure of a .lst file is:
 # A single line containing the following, semi-colon delimited: Title, Editors, Date range, Zine type
@@ -172,7 +220,6 @@ lstList = [f for f in lstList if os.path.splitext(f)[1].lower() == ".lst"]
 # A column definition line comprised of a semicolon-delimited list of column headings.  It always begins with "Issue"
 # A blank line
 # One line for each issue, each comprised of a semicolon-delimited list of data for that fanzine which matches the headings
-fanzineList=[]
 internalNameDictionary={}
 for name in lstList:
     f = open(name)

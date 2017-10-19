@@ -32,14 +32,18 @@ import re
 
 # Lists of newszines with an index.html pointing to a standard table of issues
 # (This is the "normal" case)
-indexHtmlDirectoryList=["Fanew_Sletter","FanewsCard", "File770"]
+# Case 1 has the URL and display in the TITLE column
+# Case 2 has the URL in a "Headline" column and a displayname in an Issue column
+indexHtmlDirectoryList=[("Fanew_Sletter", 1, "title"),
+                        ("FanewsCard", 2, None),
+                        ("File770", 1, "issue")]
 
 # Out of sheer laziness, I will hardwire the location of the site files.
 # Eventually, this should be handled a bit more elegantly.
 sitePath="I:/fanac.com backup/_/public/fanzines"
 
 # We shouldn't have to look at more than just the index.html file
-for name in indexHtmlDirectoryList:
+for (name, case, stuff) in indexHtmlDirectoryList:
     print("fanzine='"+name+"'")
 
     # Open the index.html file
@@ -117,41 +121,53 @@ for name in indexHtmlDirectoryList:
             colContents.append(cellText)
             rowText = remainder
 
-        # Look for the title and URL, first
-        # The format of the column contents is:
-        #  <A stuff HREF="filename.html">displayname</A>
-        #       where
-        #       stuff is optional misc HTML code (e.g., CLASS-"new")
-        #       "filename.html" is the name of the html file
-        #       "displayname" is the name as given in the title column of the tabel
-        title="title not found"
-        loc=Helpers.FindStringInList(colHeaders, "title")
-        if loc != -1:
-            title=colContents[loc]
-        # Now we decode the title to pull out the URL and displayname
-        # Start by ignoring everything before the HREF=
-        loc=title.lower().find("href=")
-        if loc == -1:
-            print("  ***Can't decode (1) title="+title)
-            continue
-        title=title[loc+5:]
-        # What's left should begin with a '"' and end with </A>.  Delete them both
-        if title[0] == '"':
-            title=title[1:]
-        if title.lower()[-4:] == "</a>":
-            title=title[:-4]
-        # Now we should have filename.html followed by '">' followed by displayname
-        loc=title.find('">')
-        if loc == -1:
-            print("  ***Can't decode (2) title="+title)
-            continue
-        s=title.split('">')
-        if len(s) != 2:
-            print("  ***Can't decode (3) title="+title)
-            continue
+        #**************************************************************************
+        # We're basically setting up a case structure here
+        # The problem is that different fanzines have different table structures, and we need to use different means to get the needed data.
+        # A case structure is probably the best choice, but since Python doesn't have that, we'll make do with lots of if-then-else clauses.
 
-        filename=s[0]
-        displayname=s[1]
+        # Look for the title and URL, first
+
+        # Case 1:
+        if case == 1:
+            # The column is supplied in the *stuff* element of
+            # The format of the column contents is:
+            #  <A stuff HREF="filename.html">displayname</A>
+            #       where
+            #       stuff is optional misc HTML code (e.g., CLASS-"new")
+            #       "filename.html" is the name of the html file
+            #       "displayname" is the name as given in the title column of the tabel
+            title="title not found"
+            loc=Helpers.FindStringInList(colHeaders, stuff)
+            if loc != -1:
+                title=colContents[loc]
+            s=Helpers.DecodeHyperlink(title)
+
+            filename=s[0]
+            displayname=s[1]
+
+        elif case == 2:
+            # In case 2, the display name is column Issue
+            # Column Headline contains the filename as the target of a link
+            displayname=None
+            loc=Helpers.FindStringInList(colHeaders, "issue")
+            if loc == -1:
+                print("   ***Missing (case 2) Issue column")
+                continue
+            displayname=colContents[loc]
+
+            # The Issue column looks like:
+            #       <TD CLASS="LEFT"><A HREF="filename">.....</A></TD>
+            title = None
+            loc = Helpers.FindStringInList(colHeaders, "Headline")
+            if loc != -1:
+                headline = colContents[loc]
+            s=Helpers.DecodeHyperlink(headline)
+            if s is None:
+                print("   ***Can't (case 2) decode Headline: "+headline)
+                continue
+            filename=s[0]
+
 
         # Now see if we can figure out the date.
         year=None   # We'll detect that a date has been found by year becoming non-Null
@@ -197,9 +213,9 @@ for name in indexHtmlDirectoryList:
                 day=1
 
         if year == None:
-            print("   **** Parse failure on date")
-
-        print("   "+title+" ==> "+ filename+", "+displayname+"   year="+str(year)+"   month="+str(month)+"   day="+str(day))
+            print("   **** Parse (cases 1 & 2) failure on date")
+        i=0
+        print("   " + filename + ", " + displayname + "   year=" + str(year) + "   month=" + str(month) + "   day=" + str(day))
 
 
     # Start building a fanzine list, containing date, URL and name for each fanzine found

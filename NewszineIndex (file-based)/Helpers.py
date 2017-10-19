@@ -1,4 +1,12 @@
+# Remove certain strings which amount to whitespace
+def RemoveDebris(str):
+    str=str.replace("<BR>", "")
+    return str.replace("<br>", "")
+
 def InterpretYear(yearstring):
+    yearstring=RemoveDebris(yearstring)
+    if len(yearstring) == 0:
+        return None
     try:
         year=int(yearstring)
     except:
@@ -7,14 +15,20 @@ def InterpretYear(yearstring):
     return year
 
 def InterpretDay(daystring):
+    daystring=RemoveDebris(daystring)
+    if len(daystring) == 0:
+        return None
     try:
         day=int(daystring)
     except:
-        print("   ***Year conversion failed: '" + daystring+"'")
+        print("   ***Day conversion failed: '" + daystring+"'")
         day=None
     return day
 
 def InterpretMonth(monthstring):
+    monthstring=RemoveDebris(monthstring)
+    if len(monthstring) == 0:
+        return None
     monthConversionTable={"jan" : 1, "january" : 1, "1" : 1,
                           "feb" : 2, "february" : 2, "2" : 2,
                           "mar" : 3, "march" : 3, "3" : 3,
@@ -58,8 +72,9 @@ def InterpretMonth(monthstring):
     return month
 
 def CannonicizeColumnHeaders(header):
+    # 2nd item is the cannonical form
     translationTable={"title" : "title",
-                      "issue" : "title",
+                      "issue" : "issue",
                       "month" : "month",
                       "mo." : "month",
                       "day" : "day",
@@ -126,3 +141,29 @@ def FindStringInList(list, str):
             return i
         i=i+1
     return -1
+
+
+# Decode a hyperlink by returning the hyperlink's target and the display text
+def DecodeHyperlink(title):
+    # Now we decode the title to pull out the URL and displayname
+    # Start by ignoring everything before the HREF=
+    loc = title.lower().find("href=")
+    if loc == -1:
+        print("   ***Can't decode (1) title=" + title)
+        return
+    title = title[loc + 5:]
+    # What's left should begin with a '"' and end with </A>.  Delete them both
+    if title[0] == '"':
+        title = title[1:]
+    if title.lower()[-4:] == "</a>":
+        title = title[:-4]
+    # Now we should have filename.html followed by '">' followed by displayname
+    loc = title.find('">')
+    if loc == -1:
+        print("  ***Can't decode (2) title=" + title)
+        return
+    s = title.split('">')
+    if len(s) != 2:
+        print("  ***Can't decode (3) title=" + title)
+        return
+    return s

@@ -34,9 +34,66 @@ import re
 # (This is the "normal" case)
 # Case 1 has the URL and display in the TITLE column
 # Case 2 has the URL in a "Headline" column and a displayname in an Issue column
-indexHtmlDirectoryList=[("Fanew_Sletter", 1, "title"),
+indexHtmlDirectoryList=[("Ansible", 1, "issue"),
+                        ("Australian_SF_News", 1, "issue"),
+                        ("Axe", 1, "title"),
+                        ("Barsoomian_Times", 1, "issue"),
+                        ("Bloomington_News", 1, "title"),
+                        ("Bullsheet", 1, "issue"),
+                        ("CHAT", 1, "issue"),
+                        ("Chronicle", 1, "issue"),
+                        ("Convention", 1, "issue"),
+                        ("Fanew_Sletter", 1, "title"),
                         ("FanewsCard", 2, None),
-                        ("File770", 1, "issue")]
+                        ("PanParade", 1, "issue"),
+                        ("FANAC", 1, "issue"),
+                        ("FANAC_Updates", 1, "issue"),
+                        ("Fantasy_News", 1, "issue"),
+                        ("Fantasy_News_NewSeries", 1, "issue"),
+                        ("Fantasy_Newsletter", 1, "issue"),
+                        ("Fantasy_Times", 1, "issue"),
+                        ("FFF", 1, "issue"),
+                        ("Fiawol", 1, "issue"),
+                        ("FightingSmofs", 1, "issue"),
+                        ("File770", 1, "issue"),
+                        ("Focal_Point", 1, "issue"),
+                        ("Futurian_Observer", 1, "issue"),
+                        ("Karass", 1, "issue"),
+                        ("Luna", 1, "issue"),
+                        ("Midwest_Fan_news", 1, "issue"),
+                        ("Nebula", 1, "issue"),
+                        ("NEOSFS", 1, "issue"),
+                        ("Newfangles", 1, "issue"),
+                        ("Organlegger", 1, "issue"),
+                        ("Phan", 1, "issue"),
+                        ("QX", 1, "issue"),
+                        ("Rally", 1, "issue"),
+                        ("Ratatosk", 1, "issue"),
+                        ("Sanders", 1, "issue"),
+                        ("Sat_Morning_Gazette", 1, "issue"),
+                        ("Science_Fantasy_Review", 1, "issue"),
+                        ("Science_Fantasy_News", 1, "issue"),
+                        ("Science_Fiction_Newsletter", 1, "title"),
+                        ("Scream", 1, "issue"),
+                        ("SETFCARD", 1, "issue"),
+                        ("SF_Chronicle", 1, "issue"),
+                        ("SF_News", 1, "issue"),
+                        ("SF_Newscope", 1, "issue"),
+                        ("SFinctor", 1, "issue"),
+                        ("SFTimes_German", 1, "issue"),
+                        ("SFWeekly", 1, "issue"),
+                        ("SFWorld", 1, "issue"),
+                        ("Skyrack", 1, "issue"),
+                        ("Shards_of_Bable", 1, "issue"),
+                        ("Spang_Blah", 1, "issue"),
+                        ("SpinDizzy", 1, "issue"),
+                        ("Starspinkle", 1, "issue"),
+                        ("STEFNEWS", 1, "issue"),
+                        ("Sweetness_Light", 1, "issue"),
+                        ("Sydney_Futurian",  1, "issue"),
+                        ("Sylmarillion", 1, "issue"),
+                        ("Thyme", 1, "issue"),
+                        ("Tympany",  1, "issue")]
 
 # Out of sheer laziness, I will hardwire the location of the site files.
 # Eventually, this should be handled a bit more elegantly.
@@ -98,7 +155,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
     #   A URL for the issue
     #   The date of the issue
     #   A title for the issue (Something like "File 770 #23" or "SF Times, January 15, 1953".)
-    # This is *very* k/l/u/d/g/y/ tricky since there's no consistency in what information is in the tables: Not content, not order, and not name
+    # This is *very* k/l/u/d/g/y/ tricky since there's not much consistency in what information is in the tables: Not content, not order, and not name
     # The first thing we do is drop everything following the </TABLE> tag
     loc=contents.find("</TITLE>")
     if loc != -1:
@@ -111,6 +168,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
         if rowText == "":
             break;
         contents=remainder
+        rowTextCopy=rowText # We keep a copy for use in error messages, since rowText itself gets nibbled away as it is being processed.
 
         # Get the cell contents.  They will be bracketed by "<TD>"
         colContents=[]
@@ -143,6 +201,10 @@ for (name, case, stuff) in indexHtmlDirectoryList:
                 title=colContents[loc]
             s=Helpers.DecodeHyperlink(title)
 
+            if s == None or s[0] == None  or s[1] == None:
+                print("   ***Could not decode HREF in field "+stuff+" and contents="+title)
+                continue
+
             filename=s[0]
             displayname=s[1]
 
@@ -152,7 +214,8 @@ for (name, case, stuff) in indexHtmlDirectoryList:
             displayname=None
             loc=Helpers.FindStringInList(colHeaders, "issue")
             if loc == -1:
-                print("   ***Missing (case 2) Issue column")
+                print("   ***"+rowTextCopy)
+                print("   ***Missing Issue column (case 2)")
                 continue
             displayname=colContents[loc]
 
@@ -164,16 +227,19 @@ for (name, case, stuff) in indexHtmlDirectoryList:
                 headline = colContents[loc]
             s=Helpers.DecodeHyperlink(headline)
             if s is None:
-                print("   ***Can't (case 2) decode Headline: "+headline)
+                print("   ***"+rowTextCopy)
+                print("   ***Can't decode Headline (case 2): "+headline)
                 continue
             filename=s[0]
 
 
         # Now see if we can figure out the date.
-        year=None   # We'll detect that a date has been found by year becoming non-Null
+        year=0   # We'll detect that a date has been found by year becoming non-zero
+        month=0
+        day=0
 
         # First, let's see if there's a column named "Date" which we can interpret as a date.
-        if year == None:
+        if year == 0:
             loc=Helpers.FindStringInList(colHeaders, "date")
             if loc != -1:
                 # We've got a column labeled "date".  Try to interpret it.
@@ -182,7 +248,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
 
         # If that didn't work, look for columns labelled Year, Month, and Day.
         # Let's figure out the date
-        if year == None:
+        if year == 0:
             month=0
             yearCol=Helpers.FindStringInList(colHeaders, "year")
             parseFailure=False
@@ -190,6 +256,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
                 if yearCol < len(colContents):
                     year = Helpers.InterpretYear(colContents[yearCol])
                 else:
+                    print("   ***" + rowTextCopy)
                     print("   ***Could not interpret in" + name + ": yearCol=" + str(yearCol) + " colContents='" + str(colContents) + "'")
                     parseFailure = True     # We must have a year
 
@@ -198,6 +265,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
                 if monthCol < len(colContents):
                     month = Helpers.InterpretMonth(colContents[monthCol])
                 else:
+                    print("   ***" + rowTextCopy)
                     print("***Could not interpret in" + name + ": monthCol=" + str(monthCol) + " colContents='" + str(colContents) + "'")
 
             dayCol=Helpers.FindStringInList(colHeaders, "day")
@@ -205,6 +273,7 @@ for (name, case, stuff) in indexHtmlDirectoryList:
                 if dayCol < len(colContents):
                     day = Helpers.InterpretDay(colContents[dayCol])
                 else:
+                    print("   ***" + rowTextCopy)
                     print("***Could not interpret in" + name + ": dayCol=" + str(dayCol) + " colContents='" + str(colContents) + "'")
 
             if year != None and month == 0:
@@ -212,8 +281,9 @@ for (name, case, stuff) in indexHtmlDirectoryList:
             if year != None and day == 0:
                 day=1
 
-        if year == None:
-            print("   **** Parse (cases 1 & 2) failure on date")
+        if year == 0:
+            print("   ***" + rowTextCopy)
+            print("   **** Parse failure on date (cases 1 & 2)")
         i=0
         print("   " + filename + ", " + displayname + "   year=" + str(year) + "   month=" + str(month) + "   day=" + str(day))
 

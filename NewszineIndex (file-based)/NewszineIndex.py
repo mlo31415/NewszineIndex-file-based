@@ -39,26 +39,26 @@ from datetime import datetime
 # 3: The site is inconsistent about the title of the column used by case 1 (the most common case by far). This specifies the name of the column to look in.
 # 4: When the file containing the table is not named index.html, this is the name of the file to look in.
 indexHtmlDirectoryList=[("Ansible", 1, "issue", None),
-#                         ("Australian_SF_News", 1, "issue", None),
-#                         ("Axe", 1, "title", None),
-#                         ("Barsoomian_Times", 1, "issue", None),
-#                         ("Bloomington_News", 1, "title", None),
-#                         ("Bullsheet", 1, "title", "Bullsheet1-00.html"),
-#                         ("Bullsheet", 1, "title", "Bullsheet2-00.html"),
-#                         ("CHAT", 1, "issue", None),
-#                         ("Chronicle", 1, "issue", None),
-#                         ("Convention", 1, "issue", None),
-#                         ("Fanew_Sletter", 1, "title", None),
-#                         ("FanewsCard", 2, None, None),
-#                         ("FanParade", 1, "issue", None),
-#                         ("FANAC", 1, "issue", None),
-#                         ("FANAC_Updates", 1, "issue", None),
-#                         ("Fantasy_News", 1, "issue", None),
-#                         ("Fantasy_News_NewSeries", 1, "issue", None),
-#                         ("Fantasy_Newsletter", 1, "issue", None),
-#                         ("Fantasy_Times", 1, "issue", None),
-#                         ("FFF", 1, "issue", None),
-#                         ("Fiawol", 1, "issue", None),
+                        ("Australian_SF_News", 1, "issue", None),
+                        ("Axe", 1, "title", None),
+                        ("Barsoomian_Times", 1, "issue", None),
+                        ("Bloomington_News", 1, "title", None),
+                        ("Bullsheet", 1, "title", "Bullsheet1-00.html"),
+                        ("Bullsheet", 1, "title", "Bullsheet2-00.html"),
+                        ("CHAT", 1, "issue", None),
+                        ("Chronicle", 1, "issue", None),
+                        ("Convention", 1, "issue", None),
+                        ("Fanew_Sletter", 1, "title", None),
+                        ("FanewsCard", 2, None, None),
+                        ("FanParade", 1, "issue", None),
+                        ("FANAC", 1, "issue", None),
+                        ("FANAC_Updates", 1, "issue", None),
+                        ("Fantasy_News", 1, "issue", None),
+                        ("Fantasy_News_NewSeries", 1, "issue", None),
+                        ("Fantasy_Newsletter", 1, "issue", None),
+                        ("Fantasy_Times", 1, "issue", None),
+                        ("FFF", 1, "issue", None),
+                        ("Fiawol", 1, "issue", None),
                         ("FightingSmofs", 1, "issue", None),
                         ("File770", 1, "issue", None),
                         ("Focal_Point", 1, "issue", None),
@@ -211,7 +211,7 @@ for (name, case, stuff, tableSource) in indexHtmlDirectoryList:
             s=Helpers.DecodeHyperlink(title)
 
             if s == None or s[0] == None  or s[1] == None:
-                print("   ***Could not decode HREF in field "+stuff+" and contents="+title)
+                print("   ***Could not decode HREF in field '"+stuff+"';  contents='"+title+"'")
                 continue
 
             filename=s[0]
@@ -298,7 +298,7 @@ for (name, case, stuff, tableSource) in indexHtmlDirectoryList:
             print("   ***" + rowTextCopy)
             print("   **** Parse failure on date (cases 1 & 2)")
         i=0
-        print("   " + filename + ", " + displayname + "   year=" + str(year) + "   month=" + str(month) + "   day=" + str(day))
+#        print("   " + filename + ", " + displayname + "   year=" + str(year) + "   month=" + str(month) + "   day=" + str(day))
 
 
     # Start building a fanzine list, containing date, URL and name for each fanzine found

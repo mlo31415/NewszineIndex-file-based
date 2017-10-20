@@ -4,6 +4,7 @@ import os
 import Helpers
 import operator
 import re
+from datetime import datetime
 
 # This is a revision of the LST-file-based NewszineIndex program based on working from a local copy of fanac.org
 
@@ -30,77 +31,82 @@ import re
 # Since there's no way to tell a newszine from anything else of fanac.org, we start with a list of newszine series
 # Each kind of directory will have a different list
 
-# Lists of newszines with an index.html pointing to a standard table of issues
-# (This is the "normal" case)
-# Case 1 has the URL and display in the TITLE column
-# Case 2 has the URL in a "Headline" column and a displayname in an Issue column
-indexHtmlDirectoryList=[("Ansible", 1, "issue"),
-                        ("Australian_SF_News", 1, "issue"),
-                        ("Axe", 1, "title"),
-                        ("Barsoomian_Times", 1, "issue"),
-                        ("Bloomington_News", 1, "title"),
-                        ("Bullsheet", 1, "issue"),
-                        ("CHAT", 1, "issue"),
-                        ("Chronicle", 1, "issue"),
-                        ("Convention", 1, "issue"),
-                        ("Fanew_Sletter", 1, "title"),
-                        ("FanewsCard", 2, None),
-                        ("PanParade", 1, "issue"),
-                        ("FANAC", 1, "issue"),
-                        ("FANAC_Updates", 1, "issue"),
-                        ("Fantasy_News", 1, "issue"),
-                        ("Fantasy_News_NewSeries", 1, "issue"),
-                        ("Fantasy_Newsletter", 1, "issue"),
-                        ("Fantasy_Times", 1, "issue"),
-                        ("FFF", 1, "issue"),
-                        ("Fiawol", 1, "issue"),
-                        ("FightingSmofs", 1, "issue"),
-                        ("File770", 1, "issue"),
-                        ("Focal_Point", 1, "issue"),
-                        ("Futurian_Observer", 1, "issue"),
-                        ("Karass", 1, "issue"),
-                        ("Luna", 1, "issue"),
-                        ("Midwest_Fan_news", 1, "issue"),
-                        ("Nebula", 1, "issue"),
-                        ("NEOSFS", 1, "issue"),
-                        ("Newfangles", 1, "issue"),
-                        ("Organlegger", 1, "issue"),
-                        ("Phan", 1, "issue"),
-                        ("QX", 1, "issue"),
-                        ("Rally", 1, "issue"),
-                        ("Ratatosk", 1, "issue"),
-                        ("Sanders", 1, "issue"),
-                        ("Sat_Morning_Gazette", 1, "issue"),
-                        ("Science_Fantasy_Review", 1, "issue"),
-                        ("Science_Fantasy_News", 1, "issue"),
-                        ("Science_Fiction_Newsletter", 1, "title"),
-                        ("Scream", 1, "issue"),
-                        ("SETFCARD", 1, "issue"),
-                        ("SF_Chronicle", 1, "issue"),
-                        ("SF_News", 1, "issue"),
-                        ("SF_Newscope", 1, "issue"),
-                        ("SFinctor", 1, "issue"),
-                        ("SFTimes_German", 1, "issue"),
-                        ("SFWeekly", 1, "issue"),
-                        ("SFWorld", 1, "issue"),
-                        ("Skyrack", 1, "issue"),
-                        ("Shards_of_Bable", 1, "issue"),
-                        ("Spang_Blah", 1, "issue"),
-                        ("SpinDizzy", 1, "issue"),
-                        ("Starspinkle", 1, "issue"),
-                        ("STEFNEWS", 1, "issue"),
-                        ("Sweetness_Light", 1, "issue"),
-                        ("Sydney_Futurian",  1, "issue"),
-                        ("Sylmarillion", 1, "issue"),
-                        ("Thyme", 1, "issue"),
-                        ("Tympany",  1, "issue")]
+# The following table lists the newszines to process. For each newszine, there are four pieces of information:
+# 1: The name of the directory within /fanzines/ in which to look for index.html
+# 2: A case which specifies the structure of the index.html file
+#   Case 1 has the URL and display in the TITLE column
+#   Case 2 has the URL in a "Headline" column and a displayname in an Issue column
+# 3: The site is inconsistent about the title of the column used by case 1 (the most common case by far). This specifies the name of the column to look in.
+# 4: When the file containing the table is not named index.html, this is the name of the file to look in.
+indexHtmlDirectoryList=[("Ansible", 1, "issue", None),
+#                         ("Australian_SF_News", 1, "issue", None),
+#                         ("Axe", 1, "title", None),
+#                         ("Barsoomian_Times", 1, "issue", None),
+#                         ("Bloomington_News", 1, "title", None),
+#                         ("Bullsheet", 1, "title", "Bullsheet1-00.html"),
+#                         ("Bullsheet", 1, "title", "Bullsheet2-00.html"),
+#                         ("CHAT", 1, "issue", None),
+#                         ("Chronicle", 1, "issue", None),
+#                         ("Convention", 1, "issue", None),
+#                         ("Fanew_Sletter", 1, "title", None),
+#                         ("FanewsCard", 2, None, None),
+#                         ("FanParade", 1, "issue", None),
+#                         ("FANAC", 1, "issue", None),
+#                         ("FANAC_Updates", 1, "issue", None),
+#                         ("Fantasy_News", 1, "issue", None),
+#                         ("Fantasy_News_NewSeries", 1, "issue", None),
+#                         ("Fantasy_Newsletter", 1, "issue", None),
+#                         ("Fantasy_Times", 1, "issue", None),
+#                         ("FFF", 1, "issue", None),
+#                         ("Fiawol", 1, "issue", None),
+                        ("FightingSmofs", 1, "issue", None),
+                        ("File770", 1, "issue", None),
+                        ("Focal_Point", 1, "issue", None),
+                        ("Futurian_Observer", 1, "issue", None),
+                        ("Karass", 1, "issue", None),
+                        ("Luna", 1, "issue", None),
+                        ("Midwest_Fan_news", 1, "issue", None),
+                        ("Nebula", 1, "issue", None),
+                        ("NEOSFS", 1, "issue", None),
+                        ("Newfangles", 1, "issue", None),
+                        ("Organlegger", 1, "issue", None),
+                        ("Phan", 1, "issue", None),
+                        ("QX", 1, "issue", None),
+                        ("Rally", 1, "issue", None),
+                        ("Ratatosk", 1, "issue", None),
+                        ("Sanders", 1, "issue", None),
+                        ("Sat_Morning_Gazette", 1, "issue", None),
+                        ("Science_Fantasy_Review", 1, "issue", None),
+                        ("Science_Fantasy_News", 1, "issue", None),
+                        ("Science_Fiction_Newsletter", 1, "title", None),
+                        ("Scream", 1, "issue", None),
+                        ("SETFCARD", 1, "issue", None),
+                        ("SF_Chronicle", 1, "issue", None),
+                        ("SF_News", 1, "issue", None),
+                        ("SF_Newscope", 1, "issue", None),
+                        ("SFinctor", 1, "issue", None),
+                        ("SFTimes_German", 1, "issue", None),
+                        ("SFWeekly", 1, "issue", None),
+                        ("SFWorld", 1, "issue", None),
+                        ("Skyrack", 1, "issue", None),
+                        ("Shards_of_Bable", 1, "issue", None),
+                        ("Spang_Blah", 1, "issue", None),
+                        ("SpinDizzy", 1, "issue", None),
+                        ("Starspinkle", 1, "issue", None),
+                        ("STEFNEWS", 1, "issue", None),
+                        ("Sweetness_Light", 1, "issue", None),
+                        ("Sydney_Futurian",  1, "issue", None),
+                        ("Sylmarillion", 1, "issue", None),
+                        ("Thyme", 1, "issue", None),
+                        ("Tympany",  1, "issue", None)]
+
 
 # Out of sheer laziness, I will hardwire the location of the site files.
 # Eventually, this should be handled a bit more elegantly.
 sitePath="I:/fanac.com backup/_/public/fanzines"
 
 # We shouldn't have to look at more than just the index.html file
-for (name, case, stuff) in indexHtmlDirectoryList:
+for (name, case, stuff, tableSource) in indexHtmlDirectoryList:
     print("fanzine='"+name+"'")
 
     # Open the index.html file
@@ -108,7 +114,10 @@ for (name, case, stuff) in indexHtmlDirectoryList:
     if not os.path.isdir(dirpath):
         print("    ***Not a directory: '"+dirpath+"'")
         continue
-    indexpath=os.path.normpath(os.path.join(dirpath, "index.html"))
+    tableFileName="index.html"
+    if tableSource != None:
+        tableFileName=tableSource
+    indexpath=os.path.normpath(os.path.join(dirpath, tableFileName))
     if not os.path.isfile(indexpath):
         print("    ***No index file: '" + indexpath + "'")
         continue
@@ -244,7 +253,11 @@ for (name, case, stuff) in indexHtmlDirectoryList:
             if loc != -1:
                 # We've got a column labeled "date".  Try to interpret it.
                 dateText=colContents[loc]
-                print("   date="+dateText)
+                d=Helpers.InterpretDateString(dateText)
+                if d is not None:
+                    year=d.year
+                    month=d.month
+                    day=d.day
 
         # If that didn't work, look for columns labelled Year, Month, and Day.
         # Let's figure out the date

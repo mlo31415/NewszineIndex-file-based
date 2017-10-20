@@ -110,6 +110,7 @@ indexHtmlDirectoryList=[("Ansible", 1, "issue", None),
 # Out of sheer laziness, I will hardwire the location of the site files.
 # Eventually, this should be handled a bit more elegantly.
 sitePath="I:/fanac.com backup/_/public/fanzines"
+onlinePath="www.fanac.org/fanzines"
 
 # We shouldn't have to look at more than just the index.html file
 for (dirname, case, stuff, tableSource) in indexHtmlDirectoryList:
@@ -348,9 +349,6 @@ histogram.close()
 
 # Now create the html
 # The directories containing the scans are expected to be in a sibling directory called "fanzines"
-#fanzinesDirname=os.path.normpath(os.path.join("something", "../fanzines"))
-fanzineDirname=sitePath
-
 
 months={1 : "January",
         2 : "February",
@@ -366,7 +364,7 @@ months={1 : "January",
         12 : "December"}
 
 
-f=open("../newszinestable.txt", "w")
+f=open("./newszinestable.txt", "w")
 print('<table border="2">', file=f) # Begin the main table
 
 fanzineList=sorted(fanzineList, key=operator.itemgetter(0, 1))
@@ -375,20 +373,20 @@ for fmz in fanzineList:
 
     # Start the row
     # Put the month & year in the first column of the table only if it changes.
-    newMothYear=str(months[fmz[1]])+" "+str(fmz[0])
-    if newMothYear != monthYear:
+    newMonthYear= str(months[fmz[1]]) + " " + str(fmz[0])
+    if newMonthYear != monthYear:
         if monthYear != "":   # Is this the first month box?
             print('</table></td></tr>', file=f)  # No.  So end the previous month box
 
         print('<tr><td><table border="0">', file=f)    # Start a new month box
-        monthYear=newMothYear
-        print('    <tr><td width="120">' + newMothYear + '</td>', file=f)
+        monthYear=newMonthYear
+        print('    <tr><td width="120">' + newMonthYear + '</td>', file=f)
     else:
         print('    <tr><td width="120">&nbsp;</td>', file=f)        # Add an empty month box
 
     # The hyperlink goes in column 2
-    url=os.path.join(sitePath, fmz[4], fmz[5])
-    print('        <td width="250">' + '<a href="./'+url+'">'+fmz[3]+'</a>' + '</td>', file=f)
+    url=onlinePath+ "/" + fmz[4] + "/" + fmz[5]
+    print('        <td width="250">' + '<a href="'+url+'">'+fmz[3]+'</a>' + '</td>', file=f)
 
     # And end the row
     print('  </tr>', file=f)

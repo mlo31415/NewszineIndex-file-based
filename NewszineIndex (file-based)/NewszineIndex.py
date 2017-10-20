@@ -112,11 +112,11 @@ indexHtmlDirectoryList=[("Ansible", 1, "issue", None),
 sitePath="I:/fanac.com backup/_/public/fanzines"
 
 # We shouldn't have to look at more than just the index.html file
-for (name, case, stuff, tableSource) in indexHtmlDirectoryList:
-    print("fanzine='"+name+"'")
+for (dirname, case, stuff, tableSource) in indexHtmlDirectoryList:
+    print("fanzine='"+dirname+"'")
 
     # Open the index.html file
-    dirpath=os.path.normpath(os.path.join(sitePath, name))
+    dirpath=os.path.normpath(os.path.join(sitePath, dirname))
     if not os.path.isdir(dirpath):
         print("    ***Not a directory: '"+dirpath+"'")
         continue
@@ -295,18 +295,20 @@ for (name, case, stuff, tableSource) in indexHtmlDirectoryList:
                     print("   ***" + rowTextCopy)
                     print("***Could not interpret in" + name + ": dayCol=" + str(dayCol) + " colContents='" + str(colContents) + "'")
 
-            if year != None and month == 0:
-                month=1 # If a year and no month is specified, we use January
-            if year != None and day == 0:
-                day=1
 
-        if year == 0:
+        if year == 0 or year == None:   # If there's no year, we don't list it.
             print("   ***" + rowTextCopy)
             print("   **** Parse failure on date (cases 1 & 2)")
-        i=0
+            continue
+
+        if month == 0 or month == None: # If no month is specified, we use January
+            month=1
+        if day == 0 or day == None:
+            day=1
+
 #        print("   " + filename + ", " + displayname + "   year=" + str(year) + "   month=" + str(month) + "   day=" + str(day))
 
-        fanzineList.append(year, month, day, displayname, filename)
+        fanzineList.append((year, month, day, displayname, dirname, filename))
 
 
 #******************************************************************************************
@@ -371,25 +373,6 @@ fanzineList=sorted(fanzineList, key=operator.itemgetter(0, 1))
 monthYear=""
 for fmz in fanzineList:
 
-    # This section deals with complicated and sometimes problematic data, so we do a bit of trial and error
-
-    url=lstNameToDirNameMap[os.path.splitext(fmz[3])[0]]        # Directory name
-    try:
-        filePrefix[url]     # We need to make sure that this fanzine is in the filePrefix table.
-    except:
-        print("   *** '"+str(url)+"' is missing from the filePrefix table")
-        print("        fmz="+str(fmz))
-        continue
-
-    # The file on disk can be a pdf or an html file.  If it's a pdf, it will already have a pdf extension
-    url = url + "/" + filePrefix[url] + fmz[5]
-    if url[-4:].lower() !=  ".pdf": # If it's not already got a .pdf extension, add an .html extension
-        url=url+".html"
-
-    if not os.path.isfile(url):
-        print("   *** File does not exist: "+url)
-        continue
-
     # Start the row
     # Put the month & year in the first column of the table only if it changes.
     newMothYear=str(months[fmz[1]])+" "+str(fmz[0])
@@ -404,7 +387,8 @@ for fmz in fanzineList:
         print('    <tr><td width="120">&nbsp;</td>', file=f)        # Add an empty month box
 
     # The hyperlink goes in column 2
-    print('        <td width="250">' + '<a href="./'+url+'">'+fmz[6]+'</a>' + '</td>', file=f)
+    url=os.path.join(sitePath, fmz[4], fmz[5])
+    print('        <td width="250">' + '<a href="./'+url+'">'+fmz[3]+'</a>' + '</td>', file=f)
 
     # And end the row
     print('  </tr>', file=f)
